@@ -309,8 +309,9 @@ CrawlGrade. Newest entries at the bottom of each section.
   the site is secure.
 - **SSRF interaction.** The audit runs the crawler with the guarded dialer and
   the default crawl-trap limits. Auditing a loopback or private target
-  requires `GR_ALLOW_PRIVATE=1`; otherwise the network policy blocks the
-  follow-on requests and the report records the blocked robots.txt and sitemap.
+  requires `--allow-private` (an environment variable in the first version,
+  see the review below); otherwise the network policy blocks the requests and
+  the report records the blocked robots.txt and sitemap.
 
 ## Review of milestones 3-5 (2026-09-15)
 
@@ -335,3 +336,14 @@ not match the code and are corrected here:
 
 `DEVELOPMENT_PLAN.md` now shows these items as open. They are completed in
 the following commits before milestone 6 work starts.
+
+Further problems found while fixing the items above:
+
+- **robots.txt unavailable was treated as "allow everything".** The audit
+  passed no `Allowed` callback when the robots.txt outcome was not `ok`, so a
+  `503` robots.txt let the crawler fetch every page. RFC 9309 requires the
+  opposite. The audit now always uses `robots.File.Allowed`, which already
+  encoded the RFC policy.
+- **The start URL bypassed robots.txt.** The crawler checked `Allowed` only
+  for discovered links, never for the start URL itself. It now checks the
+  start URL first and stops with `start-disallowed` without fetching it.

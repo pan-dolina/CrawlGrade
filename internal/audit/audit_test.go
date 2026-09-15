@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"sync"
 	"testing"
 
 	"github.com/pan-dolina/crawlgrade/internal/fetcher"
@@ -143,5 +144,31 @@ func TestAuditReportRenders(t *testing.T) {
 	}
 	if buf.Len() == 0 {
 		t.Error("html output was empty")
+	}
+}
+
+func TestUnavailableRobotsDisallowsCrawl(t *testing.T) {
+	var mu sync.Mutex
+	hits := map[string]int{}
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mu.Lock()
+		hits[r.URL.Path]++
+		mu.Unlock()
+		if r.URL.Path == "/robots.txt" {
+			w.WriteHeader(http.StatusServiceUnavailable)
+			return
+		}
+		w.Header().Set("Content-Type", "text/html")
+		_, _ = w.Write([]byte(`<a href="/other">other</a>`))
+	}))
+	defer srv.Close()
+	res := Run(context.Background(), client(), testURL(t, srv, "/"), Options{AllowPrivate: true})
+	mu.Lock()
+	defer mu.Unlock()
+	if hits["/"] != 0 || hits["/other"] != 0 {
+		t.Fatalf("pages fetched although robots.txt returned 503: %v", hits)
+	}
+	if res.Report == nil {
+		t.Fatal("no report")
 	}
 }

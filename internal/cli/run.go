@@ -16,20 +16,20 @@ import (
 )
 
 // runAudit crawls start and writes the report in the requested format.
-func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string, diffMode, noColor bool, maxPages, maxDepth, conc int) error {
+func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string, diffMode, noColor, allowPrivate bool, maxPages, maxDepth, conc int) error {
 	u, err := url.Parse(start)
 	if err != nil {
 		return usageErrorf("invalid start URL %q: %v", start, err)
 	}
 
-	dialer := &netguard.Dialer{Policy: netguard.Policy{AllowPrivate: allowPrivate(a)}}
+	dialer := &netguard.Dialer{Policy: netguard.Policy{AllowPrivate: allowPrivate}}
 	f := fetcher.New(fetcher.Options{DialContext: dialer.DialContext})
 
 	res := audit.Run(cmd.Context(), f, u, audit.Options{
 		MaxPages:     maxPages,
 		MaxDepth:     maxDepth,
 		Concurrency:  conc,
-		AllowPrivate: allowPrivate(a),
+		AllowPrivate: allowPrivate,
 	})
 	rep := res.Report
 
@@ -41,12 +41,6 @@ func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string
 		return err
 	}
 	return exitFor(rep, failOn)
-}
-
-// allowPrivate reports whether private networks should be allowed. It is
-// enabled by the GR_ALLOW_PRIVATE environment variable.
-func allowPrivate(a *App) bool {
-	return a.Getenv("GR_ALLOW_PRIVATE") != ""
 }
 
 // renderReport renders the report, or its diff against baseline when requested.

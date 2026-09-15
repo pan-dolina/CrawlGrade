@@ -69,6 +69,7 @@ func (a *App) newRootCommand() *cobra.Command {
 		baseline string
 		diffMode bool
 		noColor  bool
+		private  bool
 		maxPages int
 		maxDepth int
 		conc     int
@@ -84,10 +85,11 @@ func (a *App) newRootCommand() *cobra.Command {
 			if len(args) == 0 {
 				return cmd.Help()
 			}
-			return runAudit(a, cmd, args[0], format, failOn, baseline, diffMode, noColor, maxPages, maxDepth, conc)
+			return runAudit(a, cmd, args[0], format, failOn, baseline, diffMode, noColor, private, maxPages, maxDepth, conc)
 		},
 	}
 	flags(root, &format, &failOn, &baseline, &diffMode, &noColor, &maxPages, &maxDepth, &conc)
+	root.Flags().BoolVar(&private, "allow-private", false, "allow loopback, private and link-local destinations (cloud metadata addresses stay blocked)")
 	root.SetOut(a.Stdout)
 	root.SetErr(a.Stderr)
 	root.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {

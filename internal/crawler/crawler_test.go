@@ -302,3 +302,16 @@ func TestIsHTMLAndResources(t *testing.T) {
 		}
 	}
 }
+
+func TestCrawlStartDisallowed(t *testing.T) {
+	var hits sync.Map
+	srv := site{"/": "link:/a", "/a": "x"}.server(t, &hits)
+	r := Crawl(context.Background(), fetcher.New(fetcher.Options{}), startURL(t, srv, "/"),
+		Options{MaxDepth: DefaultMaxDepth, Allowed: func(*url.URL) bool { return false }, Process: lineLinks})
+	if len(r.Pages) != 0 || r.StopReason != StopStartDisallowed || r.SkippedCount["robots-disallowed"] != 1 {
+		t.Fatalf("pages=%d stop=%s skipped=%v", len(r.Pages), r.StopReason, r.SkippedCount)
+	}
+	if _, fetched := hits.Load("/"); fetched {
+		t.Error("disallowed start URL was fetched")
+	}
+}

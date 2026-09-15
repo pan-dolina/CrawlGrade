@@ -164,6 +164,9 @@ const (
 	StopMaxPages    StopReason = "max-pages"
 	StopMaxDuration StopReason = "max-duration"
 	StopInterrupted StopReason = "interrupted"
+	// StopStartDisallowed: robots.txt disallows the start URL (or is
+	// unavailable, which RFC 9309 treats as disallowing everything).
+	StopStartDisallowed StopReason = "start-disallowed"
 )
 
 // Result is the outcome of a crawl.
@@ -189,6 +192,11 @@ func Crawl(ctx context.Context, f Fetcher, start *url.URL, opts Options) *Result
 	}
 	c.guard.Admit(start)
 	c.seen[start.String()] = true
+	if opts.Allowed != nil && !opts.Allowed(start) {
+		c.skip(start.String(), SkipRobots)
+		c.result.StopReason = StopStartDisallowed
+		return c.result
+	}
 	level := []*url.URL{start}
 
 	for depth := 0; len(level) > 0; depth++ {

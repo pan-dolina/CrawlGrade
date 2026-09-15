@@ -84,13 +84,11 @@ func defaultInt(v, def int) int {
 	return v
 }
 
-// allowedFunc returns the crawler Allowed callback from the robots.txt outcome.
-// A nil callback lets the crawler fetch everything, which matches the robots
-// package when the file is missing or unusable.
+// allowedFunc returns the crawler Allowed callback from the robots.txt
+// outcome. A missing robots.txt (4xx) allows everything; an unavailable one
+// (5xx, network failure, redirect to a blocked destination) disallows
+// everything, as RFC 9309 requires. robots.File.Allowed implements both.
 func allowedFunc(file *robots.File) func(*url.URL) bool {
-	if file.Outcome != robots.OutcomeOK {
-		return nil
-	}
 	return file.Allowed
 }
 

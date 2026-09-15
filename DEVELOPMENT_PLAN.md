@@ -3,35 +3,35 @@
 CrawlGrade is built incrementally; each step lands as one or more reviewed
 commits with tests.
 
-## Milestone 1 - Safe foundations
+## Milestone 1 - Safe foundations (done)
 
-- [ ] CLI root and version commands, exit codes
-- [ ] Finding and severity model with a documented rule catalog
-- [ ] Bounded HTTP fetcher (timeouts, body and decompression limits, manual redirects)
-- [ ] SSRF policy: guarded dialer, redirect target checks, DNS rebinding mitigation
-- [ ] URL normalization and scope control, crawl trap heuristics
-- [ ] Bounded crawler with worker pool and rate limiting
+- [x] CLI root and version commands, exit codes
+- [x] Finding and severity model with a documented rule catalog
+- [x] Bounded HTTP fetcher (timeouts, body and decompression limits, manual redirects)
+- [x] SSRF policy: guarded dialer, redirect target checks, DNS rebinding mitigation
+- [x] URL normalization and scope control, crawl trap heuristics
+- [x] Bounded crawler with worker pool and rate limiting
 
-## Milestone 2 - Crawl inputs
+## Milestone 2 - Crawl inputs (done)
 
-- [ ] robots.txt (RFC 9309)
-- [ ] XML sitemaps, sitemap indexes, gzip with decompression limits
-- [ ] Controlled local test site
+- [x] robots.txt (RFC 9309)
+- [x] XML sitemaps, sitemap indexes, gzip with decompression limits
+- [x] Controlled local test site
 
-## Milestone 3 - Page analysis
+## Milestone 3 - Page analysis (done)
 
-- [ ] Title, description, headings, canonical, robots meta and X-Robots-Tag
+- [x] Title, description, headings, canonical, robots meta and X-Robots-Tag
 - [x] JSON-LD structured data and breadcrumbs (JSON-LD and microdata)
 - [x] hreflang
 - [x] Images, OpenGraph, Twitter cards
 - [x] Internal link graph
 
-## Milestone 4 - Content analysis
+## Milestone 4 - Content analysis (done)
 
-- [ ] Main content extraction and boilerplate removal
-- [ ] Polish and English tokenization with static stopword lists
-- [ ] Unigram, bigram and trigram term strength, per page and site-wide
-- [ ] Exact and near-duplicate detection
+- [x] Main content extraction and boilerplate removal
+- [x] Polish and English tokenization with static stopword lists
+- [x] Unigram, bigram and trigram term strength, per page and site-wide
+- [x] Exact and near-duplicate detection
 
 ## Milestone 5 - Reporting
 

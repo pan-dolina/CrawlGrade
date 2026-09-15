@@ -57,3 +57,22 @@ CrawlGrade. Newest entries at the bottom of each section.
   to them, and they are the most valuable SSRF target.
 - Environment proxies are ignored (`Transport.Proxy = nil`); a proxy would
   make the connection on our behalf to an address we never checked.
+
+## URL normalization
+
+- Normalization follows RFC 3986 sections 6.2.2 and 6.2.3 only: lower-case
+  scheme and host, IDNA to ASCII (non-transitional, BiDi rule), default port
+  removal, percent-encoding case, decoding of encoded unreserved characters
+  and dot-segment removal. Paths are case-sensitive and `/a` and `/a/` are
+  different resources on many servers, so neither is changed. Query parameter
+  order is preserved; sorting it would merge URLs a site treats differently.
+- Percent-encoding is normalized **before** dot segments are removed, so
+  `/a/%2e%2e/b` resolves like `/a/../b`.
+- Reports show host names in their ASCII (punycode) form. Unicode host names
+  can be visually confusable and may contain BiDi characters; ASCII output
+  cannot spoof another host in a terminal or an HTML report.
+- Percent-encoded host names are rejected: parsers disagree on whether to
+  decode them, and the crawler must know exactly which host it contacts.
+- Site scope ignores a leading `www.` and the scheme, and includes a
+  non-default port. `http://example.com` redirecting to
+  `https://www.example.com` is therefore an internal redirect.

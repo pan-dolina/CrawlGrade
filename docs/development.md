@@ -96,3 +96,26 @@ CrawlGrade. Newest entries at the bottom of each section.
 - The rate limiter spaces request starts evenly (`1/rps`) and is consulted
   before every redirect hop, not only before each page, so redirect chains
   cannot bypass `--requests-per-second`.
+
+## robots.txt
+
+- RFC 9309 semantics: groups for the same product token are merged; the
+  `*` groups apply only when no group names `crawlgrade`; the longest
+  matching pattern wins and `Allow` wins ties; `/robots.txt` is always
+  allowed.
+- 4xx (including 401 and 403) means "no restrictions" and produces only an
+  informational finding. 5xx, network errors, redirect loops and responses
+  blocked by the network policy mean "disallow everything", as the RFC
+  requires. This is deliberately strict: a crawler that ignores a failing
+  robots.txt could crawl a site against its operator's wishes.
+- Wildcard matching uses the iterative star-backtracking algorithm, bounded
+  by `O(len(pattern) * len(path))`. Patterns are limited to 2 048 bytes and
+  files to 10 000 rules, so a hostile robots.txt cannot make URL admission
+  quadratic in the file size. A naive recursive matcher would take
+  exponential time on patterns such as `*a*a*a...b$`;
+  `TestPathologicalPatternIsFast` guards against that.
+- Patterns and paths are compared after the same percent-encoding
+  normalization, so `/caf%C3%A9` matches a link written as `/café`.
+- Unknown directives (`Host`, `Noindex`, `Clean-param`) are reported but do
+  not end a run of `User-agent` lines, matching Google's parser; otherwise a
+  `Host:` line between two `User-agent` lines would split the group.

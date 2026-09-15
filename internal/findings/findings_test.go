@@ -95,7 +95,7 @@ func TestTruncate(t *testing.T) {
 		{"abc", 3, "abc"},
 		{"abcd", 3, "ab…"},
 		{"abcd", 1, "…"},
-		{"\xff\xfe", 5, "�"},
+		{"\xff\xfe", 5, "\uFFFD"},
 	}
 	for _, c := range cases {
 		if got := Truncate(c.in, c.max); got != c.want {

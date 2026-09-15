@@ -193,7 +193,7 @@ func LimitEvidence(lines []string) []string {
 // ellipsis. Invalid UTF-8 is replaced.
 func Truncate(s string, maxRunes int) string {
 	if !utf8.ValidString(s) {
-		s = strings.ToValidUTF8(s, "�")
+		s = strings.ToValidUTF8(s, "\uFFFD")
 	}
 	if utf8.RuneCountInString(s) <= maxRunes {
 		return s

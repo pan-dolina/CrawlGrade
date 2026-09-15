@@ -13,6 +13,9 @@ import (
 // MaxCanonicals bounds the canonical declarations recorded per page.
 const MaxCanonicals = 20
 
+// maxCanonicalHops bounds how far canonical chains are followed.
+const maxCanonicalHops = 20
+
 // Canonical is one rel=canonical declaration.
 type Canonical struct {
 	Href     string `json:"href"`
@@ -191,10 +194,10 @@ func CanonicalSiteFindings(pages []*Page, lookup func(string) (Target, bool)) []
 			continue
 		}
 		// Follow canonical declarations from the target to detect chains
-		// and loops. The walk is bounded by the number of pages.
+		// and loops, for at most maxCanonicalHops steps.
 		chain := []string{p.URL, c}
 		next := t.Canonical
-		for steps := 0; next != "" && steps < len(pages)+1; steps++ {
+		for steps := 0; next != "" && steps < maxCanonicalHops; steps++ {
 			if next == chain[len(chain)-1] {
 				break // self-canonical: end of chain
 			}

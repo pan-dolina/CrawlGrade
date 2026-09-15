@@ -142,3 +142,24 @@ CrawlGrade. Newest entries at the bottom of each section.
 - Sitemaps declared in robots.txt may live on other hosts (cross-submission)
   and are fetched through the same guarded dialer. URLs listed in them are
   only compared with the crawl when they are in scope.
+
+## HTML parsing
+
+- **golang.org/x/net/html** (already a dependency for IDNA) implements the
+  HTML5 tree construction algorithm, so broken markup is interpreted as a
+  browser would. `golang.org/x/net/html/charset` decodes legacy encodings
+  (ISO-8859-2 is still common on Polish sites) from the Content-Type header,
+  BOM or `<meta charset>`.
+- **Parser failure:** `html.Parse` returns
+  `open stack of elements exceeds 512 nodes` for documents nested deeper
+  than 512 open elements. Browsers render such pages, but CrawlGrade cannot
+  build a reliable model; the page is reported as unparseable instead of
+  being analysed from a partial tree.
+- Tree walks are iterative (explicit stack) so traversal cost does not
+  depend on goroutine stack size.
+- `<title>` and `<a>` inside SVG or MathML are foreign elements and are
+  ignored; `<template>` contents are inert and skipped. A `<title>` outside
+  `<head>` is used only when the head has none, which matches how browsers
+  pick the document title.
+- `<base href>` is honoured only for http(s) values; a `javascript:` base
+  would otherwise make every relative link unresolvable.

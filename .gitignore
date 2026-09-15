@@ -1,0 +1,28 @@
+# Build output
+/bin/
+/crawlgrade
+/dist/
+/sbom/
+*.exe
+*.test
+*.out
+coverage.*
+
+# Reports written while trying the CLI locally
+/baseline.json
+/current.json
+/report.html
+
+# Go fuzzing corpora generated locally (committed seeds live in testdata/fuzz)
+/internal/**/testdata/fuzz/**/cache/
+
+# Editors and OS files
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Local assistant/tooling notes, not part of the project
+AGENTS.md
+CLAUDE.md
+PROJECT.md

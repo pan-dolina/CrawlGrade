@@ -1,0 +1,4 @@
+# Golden reports and HTML fixtures are compared byte for byte.
+testdata/** -text
+*.go text eol=lf
+*.sh text eol=lf

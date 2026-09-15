@@ -119,3 +119,26 @@ CrawlGrade. Newest entries at the bottom of each section.
 - Unknown directives (`Host`, `Noindex`, `Clean-param`) are reported but do
   not end a run of `User-agent` lines, matching Google's parser; otherwise a
   `Host:` line between two `User-agent` lines would split the group.
+
+## Sitemaps and decompression limits
+
+- Two layers of gzip exist and both are bounded. HTTP `Content-Encoding:
+  gzip` is removed by the fetcher under its decompressed-size limit.
+  Sitemap files that are themselves gzip archives (`sitemap.xml.gz` served
+  as `application/gzip`) are decompressed by the sitemap package under the
+  same 50 MiB limit. A gzip archive nested inside another is decompressed
+  only once; the inner archive then fails XML parsing instead of being
+  unpacked recursively.
+- The sitemap limit reader reports overflow as an error instead of
+  truncating like `io.LimitReader`, so a compression bomb is reported as a
+  limit violation and not as "unexpected EOF". While writing the bomb test,
+  the first version still classified any error on a `200` response as an
+  invalid document (SEO-SITEMAP-003); only parse failures are now reported
+  as invalid, and limit violations as unavailable (SEO-SITEMAP-002).
+- XML is parsed with `encoding/xml` in strict mode. It does not resolve
+  external entities or expand internal entity declarations, so XXE and
+  "billion laughs" do not apply; a DOCTYPE with custom entities makes the
+  document fail to parse, which is reported as an invalid sitemap.
+- Sitemaps declared in robots.txt may live on other hosts (cross-submission)
+  and are fetched through the same guarded dialer. URLs listed in them are
+  only compared with the crawl when they are in scope.

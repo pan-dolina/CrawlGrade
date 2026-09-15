@@ -1,7 +1,6 @@
 package sitemap
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"net/url"
@@ -43,10 +42,15 @@ type File struct {
 	// Truncated is set when the file had more entries than the protocol
 	// allows or than MaxURLs left room for.
 	Truncated bool `json:"truncated,omitempty"`
-	Depth     int  `json:"-"`
+	// Gzip is set for gzip-compressed sitemap files (.xml.gz), which are
+	// decompressed by CrawlGrade under the MaxBytes limit.
+	Gzip  bool `json:"gzip,omitempty"`
+	Depth int  `json:"-"`
 	// Declared is true for files listed in robots.txt or given explicitly;
 	// the default /sitemap.xml probe is not declared.
 	Declared bool `json:"-"`
+	// invalid marks documents that were fetched but could not be parsed.
+	invalid bool
 }
 
 // URL is a page URL listed in a sitemap.
@@ -205,9 +209,20 @@ func fetchFile(ctx context.Context, f Fetcher, file *File, maxBytes int64) *Docu
 		file.Error = fmt.Sprintf("HTTP status %d", resp.Status)
 		return nil
 	}
-	doc, err := Parse(bytes.NewReader(resp.Body))
+	body, err := openBody(resp, maxBytes)
 	if err != nil {
 		file.Error = err.Error()
+		return nil
+	}
+	file.Gzip = body.gzip
+	doc, err := Parse(body)
+	if body.exceeded {
+		file.Error = (&fetcher.LimitError{Limit: "decompressed", Max: maxBytes}).Error()
+		return nil
+	}
+	if err != nil {
+		file.Error = err.Error()
+		file.invalid = true
 		if doc != nil {
 			file.Kind = doc.Kind
 		}
@@ -236,9 +251,9 @@ func (r *Result) Findings() []findings.Finding {
 	for _, f := range r.Files {
 		if f.Error != "" {
 			switch {
-			case f.Status >= 200 && f.Status < 300:
+			case f.invalid:
 				out = append(out, findings.SitemapInvalid.New(f.URL, f.Error))
-			case f.Declared:
+			case f.Declared || f.Status >= 200 && f.Status < 300:
 				out = append(out, findings.SitemapUnavailable.New(f.URL, "source: "+f.Source, f.Error))
 			}
 			// A failing probe of the undeclared /sitemap.xml is covered by

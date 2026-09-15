@@ -57,3 +57,55 @@ var (
 		Recommendation: "Serve robots.txt directly on each host, or make sure the redirect target is the intended file.",
 	})
 )
+
+// Crawlability: XML sitemaps.
+var (
+	SitemapMissing = register(Rule{
+		ID: "SEO-SITEMAP-001", Category: CategoryCrawlability, Severity: SeverityLow,
+		Title:          "No usable XML sitemap found",
+		Description:    "robots.txt declares no sitemap and /sitemap.xml does not return a valid sitemap.",
+		Recommendation: "Publish an XML sitemap listing canonical, indexable URLs and reference it from robots.txt.",
+	})
+	SitemapUnavailable = register(Rule{
+		ID: "SEO-SITEMAP-002", Category: CategoryCrawlability, Severity: SeverityMedium,
+		Title:          "Declared sitemap could not be fetched",
+		Description:    "A sitemap listed in robots.txt or a sitemap index returned an error status, failed to download or exceeded a safety limit.",
+		Recommendation: "Make sure every declared sitemap URL returns 200 with the sitemap document, or remove stale references.",
+	})
+	SitemapInvalid = register(Rule{
+		ID: "SEO-SITEMAP-003", Category: CategoryCrawlability, Severity: SeverityMedium,
+		Title:          "Sitemap is not a valid sitemap document",
+		Description:    "The file is not well-formed UTF-8 XML or its root element is neither urlset nor sitemapindex.",
+		Recommendation: "Serve a sitemaps.org 0.9 document; validate it against the protocol schema.",
+	})
+	SitemapTooLarge = register(Rule{
+		ID: "SEO-SITEMAP-004", Category: CategoryCrawlability, Severity: SeverityMedium,
+		Title:          "Sitemap exceeds protocol limits",
+		Description:    "The file lists more than 50 000 entries. Search engines ignore entries beyond the limit.",
+		Recommendation: "Split the sitemap into files of at most 50 000 URLs and 50 MB (uncompressed) referenced by a sitemap index.",
+	})
+	SitemapWarnings = register(Rule{
+		ID: "SEO-SITEMAP-005", Category: CategoryCrawlability, Severity: SeverityLow,
+		Title:          "Sitemap contains malformed entries",
+		Description:    "Entries without <loc>, invalid <lastmod> values, a wrong namespace or nested sitemap indexes were found.",
+		Recommendation: "Fix the listed entries. lastmod must be a W3C Datetime and sitemap indexes must not reference other indexes.",
+	})
+	SitemapOutOfScope = register(Rule{
+		ID: "SEO-SITEMAP-006", Category: CategoryCrawlability, Severity: SeverityLow,
+		Title:          "Sitemap lists URLs outside the site",
+		Description:    "Sitemap URLs must belong to the host the sitemap describes unless cross-submission is verified.",
+		Recommendation: "List only URLs of this site, or verify cross-site submission in the search engines' webmaster tools.",
+	})
+	SitemapInvalidLoc = register(Rule{
+		ID: "SEO-SITEMAP-007", Category: CategoryCrawlability, Severity: SeverityLow,
+		Title:          "Sitemap contains invalid URLs",
+		Description:    "Some <loc> values are relative, use unsupported schemes or cannot be parsed.",
+		Recommendation: "Use fully qualified, properly escaped http or https URLs in <loc>.",
+	})
+	SitemapLimitReached = register(Rule{
+		ID: "SEO-SITEMAP-008", Category: CategoryCrawlability, Severity: SeverityInfo,
+		Title:          "Sitemap discovery stopped at a CrawlGrade limit",
+		Description:    "More sitemap files or URLs exist than CrawlGrade reads; sitemap comparisons cover only the part that was read.",
+		Recommendation: "No action needed for the site. Audit large sitemaps in parts if a complete comparison is required.",
+	})
+)

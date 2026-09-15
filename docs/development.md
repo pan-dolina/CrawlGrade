@@ -311,3 +311,27 @@ CrawlGrade. Newest entries at the bottom of each section.
   the default crawl-trap limits. Auditing a loopback or private target
   requires `GR_ALLOW_PRIVATE=1`; otherwise the network policy blocks the
   follow-on requests and the report records the blocked robots.txt and sitemap.
+
+## Review of milestones 3-5 (2026-09-15)
+
+Before starting milestone 6, the code merged for milestones 3-5 was compared
+with the specification and with this journal. Several statements above did
+not match the code and are corrected here:
+
+- The crawler clears `Response.Body` after `Process` returns. The audit then
+  re-read the bodies for content, term and web hygiene analysis, so in real
+  crawls those analyses received empty input. Unit tests passed because they
+  exercised the packages directly.
+- Structured data and breadcrumb findings were not wired into the audit
+  (`structuredFindings` returned nil), and duplicate detection was not called.
+- Web hygiene did not make the described extra request to the `http://`
+  variant of the start URL; only HTTPS, `X-Content-Type-Options` and
+  `Referrer-Policy` were checked.
+- Term strength ranked raw frequencies. There were no zone weights, no
+  document-frequency weighting and no 0-100 scale; the Polish stopword list
+  was incomplete and contained non-words.
+- `--allow-private` was an environment variable (`GR_ALLOW_PRIVATE`) rather
+  than the flag the safety model documents.
+
+`DEVELOPMENT_PLAN.md` now shows these items as open. They are completed in
+the following commits before milestone 6 work starts.

@@ -18,28 +18,33 @@ commits with tests.
 - [x] XML sitemaps, sitemap indexes, gzip with decompression limits
 - [x] Controlled local test site
 
-## Milestone 3 - Page analysis (done)
+## Milestone 3 - Page analysis (in progress)
 
 - [x] Title, description, headings, canonical, robots meta and X-Robots-Tag
 - [x] JSON-LD structured data and breadcrumbs (JSON-LD and microdata)
-- [x] hreflang
-- [x] Images, OpenGraph, Twitter cards
-- [x] Internal link graph
+- [ ] hreflang: language/region validation, duplicates, x-default, reciprocity, relation to html lang
+- [ ] Images: alt, width/height, loading, broken URLs
+- [~] OpenGraph and Twitter cards (parsed; required property checks missing)
+- [ ] Internal link graph with inbound/outbound metrics, rel attributes, weakly linked and orphan-like pages
 
-## Milestone 4 - Content analysis (done)
+## Milestone 4 - Content analysis (in progress)
 
-- [x] Main content extraction and boilerplate removal
-- [x] Polish and English tokenization with static stopword lists
-- [x] Unigram, bigram and trigram term strength, per page and site-wide
-- [x] Exact and near-duplicate detection
+- [ ] Main content extraction with documented boilerplate removal (current version only skips chrome elements)
+- [ ] Polish and English tokenization with static stopword lists in the repository
+- [ ] Weighted unigram, bigram and trigram term strength (TF-IDF, 0-100), per page and site-wide
+- [~] Exact and near-duplicate detection (package exists, not wired into the audit)
 
-## Milestone 5 - Reporting (done)
+## Milestone 5 - Reporting (in progress)
 
-- [x] Passive web hygiene checks (`internal/webhygiene`)
-- [x] Terminal, versioned JSON and standalone escaped HTML reports (`internal/report`)
-- [x] Baseline output and diff (`--baseline`, `--diff`)
-- [x] Audit orchestration wiring crawl + analyses + report (`internal/audit`)
-- [x] CLI: `--format`, `--fail-on`, `--baseline`, `--diff`, `--no-color`, `GR_ALLOW_PRIVATE`
+- [~] Passive web hygiene checks (HTTPS, nosniff, Referrer-Policy only)
+- [~] Terminal, versioned JSON and HTML reports (no finding IDs, terms, link graph or scores; no CSP)
+- [~] Baseline and diff (`--baseline`/`--diff`; `crawlgrade diff` and aggregate deltas missing)
+- [~] Audit orchestration (structured data, duplicates, HTTP and sitemap comparisons not wired; page bodies are dropped before content analysis)
+- [ ] CLI flags from the specification (`--json`, `--output`, `--keywords`, `--timeout`, `--user-agent`, `--requests-per-second`, `--check-external-links`, `--allow-private`)
+
+A review on 2026-09-15 found that milestones 3-5 had been marked complete
+while the items above were missing or only partly implemented. The status
+now reflects the code.
 
 ## Milestone 6 - Assurance and release
 

@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"golang.org/x/net/idna"
@@ -57,7 +58,7 @@ func Parse(raw string) (*url.URL, error) {
 // Resolve resolves ref against base (which may be nil for absolute refs)
 // the way a browser resolves an href attribute, and normalizes the result.
 func Resolve(base *url.URL, ref string) (*url.URL, error) {
-	ref = cleanHref(ref)
+	ref = escapeStrayPercent(cleanHref(ref))
 	if len(ref) > MaxURLLength {
 		return nil, ErrTooLong
 	}
@@ -82,6 +83,34 @@ func cleanHref(s string) string {
 	return s
 }
 
+// escapeStrayPercent encodes "%" signs that do not start a valid escape, as
+// browsers do; net/url rejects such URLs outright.
+func escapeStrayPercent(s string) string {
+	if !strings.Contains(s, "%") {
+		return s
+	}
+	var b strings.Builder
+	for i := 0; i < len(s); i++ {
+		if s[i] == '%' {
+			_, ok1 := unhexAt(s, i+1)
+			_, ok2 := unhexAt(s, i+2)
+			if !ok1 || !ok2 {
+				b.WriteString("%25")
+				continue
+			}
+		}
+		b.WriteByte(s[i])
+	}
+	return b.String()
+}
+
+func unhexAt(s string, i int) (byte, bool) {
+	if i >= len(s) {
+		return 0, false
+	}
+	return unhex(s[i])
+}
+
 // Normalize returns a normalized copy of an absolute URL.
 func Normalize(in *url.URL) (*url.URL, error) {
 	scheme := strings.ToLower(in.Scheme)
@@ -101,20 +130,9 @@ func Normalize(in *url.URL) (*url.URL, error) {
 	if err != nil {
 		return nil, err
 	}
-	port := in.Port()
-	if (scheme == "http" && port == "80") || (scheme == "https" && port == "443") {
-		port = ""
-	}
-	if port != "" {
-		for _, c := range port {
-			if c < '0' || c > '9' {
-				return nil, fmt.Errorf("%w: port %q", ErrInvalidURL, port)
-			}
-		}
-		port = strings.TrimLeft(port, "0")
-		if port == "" || len(port) > 5 {
-			return nil, fmt.Errorf("%w: port", ErrInvalidURL)
-		}
+	port, err := normalizePort(scheme, in.Port())
+	if err != nil {
+		return nil, err
 	}
 
 	var b strings.Builder
@@ -146,6 +164,28 @@ func Normalize(in *url.URL) (*url.URL, error) {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidURL, err)
 	}
 	return out, nil
+}
+
+func normalizePort(scheme, port string) (string, error) {
+	if port == "" {
+		return "", nil
+	}
+	for _, c := range port {
+		if c < '0' || c > '9' {
+			return "", fmt.Errorf("%w: port %q", ErrInvalidURL, port)
+		}
+	}
+	port = strings.TrimLeft(port, "0")
+	if port == "" || len(port) > 5 {
+		return "", fmt.Errorf("%w: port out of range", ErrInvalidURL)
+	}
+	if n, _ := strconv.Atoi(port); n > 65535 {
+		return "", fmt.Errorf("%w: port out of range", ErrInvalidURL)
+	}
+	if (scheme == "http" && port == "80") || (scheme == "https" && port == "443") {
+		return "", nil
+	}
+	return port, nil
 }
 
 func normalizeHost(host string) (string, error) {

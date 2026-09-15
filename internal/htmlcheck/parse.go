@@ -31,6 +31,7 @@ type Page struct {
 	Descriptions []string    `json:"descriptions,omitempty"`
 	Headings     []Heading   `json:"headings,omitempty"`
 	Canonicals   []Canonical `json:"canonicals,omitempty"`
+	Robots       Robots      `json:"robots"`
 
 	base *url.URL
 }
@@ -85,6 +86,8 @@ func Parse(body []byte, pageURL *url.URL, contentType string) (*Page, *html.Node
 			name := strings.ToLower(strings.TrimSpace(attr(n, "name")))
 			if name == "description" {
 				p.Descriptions = append(p.Descriptions, clip(collapse(attr(n, "content"))))
+			} else if agent, ok := robotsAgent(name); ok {
+				p.addRobots("meta", agent, attr(n, "content"))
 			}
 		case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
 			if len(p.Headings) < MaxHeadings {

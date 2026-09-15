@@ -163,3 +163,20 @@ CrawlGrade. Newest entries at the bottom of each section.
   pick the document title.
 - `<base href>` is honoured only for http(s) values; a `javascript:` base
   would otherwise make every relative link unresolvable.
+
+## Robots metadata
+
+- `<meta name="robots">`, `<meta name="googlebot">` and unprefixed or
+  `googlebot:`-prefixed `X-Robots-Tag` headers are merged; the most
+  restrictive value wins (`noindex` beats `index`, the smallest
+  `max-snippet` wins, `-1` means unlimited). Directives for other named
+  crawlers are recorded in the report but do not change indexability.
+- `X-Robots-Tag: max-snippet: 0` must not be read as a directive for a
+  crawler named "max-snippet"; names of parameterised directives are
+  excluded from the agent-prefix detection.
+- Robots meta tags in `<body>` still apply: search engines honour them, so
+  ignoring them would hide a real `noindex`.
+- **False positive decision:** `noindex` is reported as `low`, not higher,
+  because excluding pages (search results, carts, thank-you pages) is
+  routine. It is `critical` only on the audited start URL, and sitemap
+  comparisons raise noindex URLs that are listed in a sitemap separately.

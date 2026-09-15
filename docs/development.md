@@ -234,3 +234,37 @@ CrawlGrade. Newest entries at the bottom of each section.
 - **False positive decision:** orphans are reported only for indexable
   pages. A `noindex` page (a search-results page, a cart, a thank-you page)
   is routinely unlinked, and flagging it would add noise to every audit.
+
+## Content, term strength and duplicates
+
+- **Content extraction.** The `content` package parses the document and walks
+  it with a bounded, stack-based traversal (so a hostile document cannot
+  exhaust the stack). A fixed set of elements (`head`, `nav`, `header`,
+  `footer`, `aside`, `form`, `script`, `style`, `noscript`, `template`, `svg`,
+  `math`) is treated as shared chrome and skipped; the text of everything
+  else is collected as main content. The collected text is capped at 64 KiB
+  and the traversal at 20 000 elements. A page whose main text is less than
+  5% of the raw text is reported as boilerplate; a page with no tokens left
+  is reported separately.
+- **Tokenization.** The `terms` package keeps runs of letters and digits and
+  drops everything else. A small union of Polish and English stopwords
+  removes the function words that carry no topical signal, so the same list
+  works for mixed-language pages. Tokens longer than 40 runes are dropped so
+  a hostile document cannot produce gigantic n-grams.
+- **Term strength.** The `terms` package extracts unigrams through trigrams
+  and, per page, ranks them by raw frequency. The `terms_strength` package
+  aggregates the profiles across the crawl: a term's site-wide strength is the
+  fraction of indexable pages that mention it. A term concentrated on one page
+  is page-specific; a term spread across many pages is site-wide. Pages that
+  share the same dominant n-grams are reported as reinforced duplicates.
+- **Duplicates.** The `duplicates` package finds exact duplicates by hashing
+  the extracted text and near-duplicates with a SimHash: a 64-bit fingerprint
+  of the token stream that stays small when two documents share many tokens.
+  Two pages are near-duplicates when their fingerprints are within a Hamming
+  distance of 5, which tolerates the word reordering and small edits that
+  separate real duplicates while keeping unrelated pages far apart. Both
+  analyses are pure functions of the extracted text, so they are
+  deterministic and need no network.
+- **False positive decision:** duplicate and term-strength findings are
+  reported only for indexable pages; a `noindex` page is not treated as a
+  competitor for a topic.

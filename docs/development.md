@@ -21,3 +21,39 @@ CrawlGrade. Newest entries at the bottom of each section.
 
 - Exit codes are defined once in `internal/cli/exitcode.go` and printed in
   `--help`. Cobra's own flag and argument errors are mapped to exit code 2.
+- The fetcher never lets `net/http` follow redirects (`CheckRedirect`
+  returns `http.ErrUseLastResponse`). Each hop is issued by `Fetch`, so the
+  chain is recorded for the report, loops are detected by URL rather than by
+  a hop counter alone, and every hop goes through the guarded dialer.
+- Transport-level decompression is disabled. The fetcher asks for `gzip`
+  only and decodes it itself through two limits: bytes read from the
+  connection and bytes produced by the decoder. Stacked encodings
+  (`gzip, gzip`) and encodings that were not requested (`br`, `deflate`) are
+  rejected instead of being passed to the HTML parser as binary noise.
+- A body that exceeds a limit is an error, not a truncated page. Parsing a
+  truncated HTML document would produce misleading findings (a missing
+  `</html>` is harmless, but so would be a missing canonical that happened to
+  sit after the cut).
+
+## SSRF design
+
+- The policy lives in `netguard.Dialer` (ADR 0001). Checking URLs before a
+  request cannot see redirects handled inside `net/http`, nor the address a
+  name resolves to at connection time.
+- **DNS rebinding.** The dialer resolves a name once, checks every returned
+  address and dials the checked IP literal. A second resolution never
+  happens between check and connect. When an answer mixes public and private
+  addresses the host is rejected entirely; dropping only the bad records
+  would still let an attacker influence which address is used.
+- The `net.Dialer.Control` hook re-checks the socket address immediately
+  before `connect(2)`, covering any path that reaches the dialer with a
+  literal address.
+- Addresses that embed IPv4 (IPv4-mapped, NAT64 `64:ff9b::/96`, 6to4) are
+  classified by the embedded address; Teredo is rejected because its
+  embedded client address is obfuscated. IPv6 outside `2000::/3` is treated
+  as reserved.
+- `--allow-private` is for auditing local development sites. Cloud metadata
+  addresses stay blocked even then: a local target has no reason to redirect
+  to them, and they are the most valuable SSRF target.
+- Environment proxies are ignored (`Transport.Proxy = nil`); a proxy would
+  make the connection on our behalf to an address we never checked.

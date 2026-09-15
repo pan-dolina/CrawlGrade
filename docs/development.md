@@ -268,3 +268,46 @@ CrawlGrade. Newest entries at the bottom of each section.
 - **False positive decision:** duplicate and term-strength findings are
   reported only for indexable pages; a `noindex` page is not treated as a
   competitor for a topic.
+
+## Reporting, audit orchestration and web hygiene
+
+- **Report model.** `internal/report` defines a versioned, self-describing
+  `Report` (`schema_version: "1"`) that is the single input to every renderer
+  and to the baseline diff. Findings are grouped by the analysis that produced
+  them (`crawlability`, `metadata`, `content`, `structured-data`,
+  `internal-linking`, `web-hygiene`), and the group names are a public
+  contract. `New` sorts the findings so every format and every diff is
+  deterministic.
+- **Renderers.** The terminal renderer emits severity markers and never emits
+  ANSI colour itself (the caller may add it). The JSON renderer is indented
+  and round-trips through `Load`. The HTML renderer is a single standalone
+  document with inline CSS (light/dark mode) and no external resources; every
+  value is passed through `html/template`, so a hostile title cannot inject
+  markup.
+- **Baseline and diff.** `Compare` matches findings by a key of
+  `ID\x00URL\x00evidence` so the same observation is stable across runs. It
+  errors when the baseline and current reports have different schema versions,
+  and the CLI exposes the result through `--baseline` (full report) and
+  `--diff` (only the delta).
+- **Audit orchestration.** `internal/audit` is the only place that turns a URL
+  into a report. It fetches robots.txt and a sitemap before the crawl so their
+  rules govern the crawl, parses each HTML page with `htmlcheck` in the
+  crawler's `Process` callback (storing the page and its scope on
+  `crawler.Page.Data`), and then runs the per-page and site-wide analyses. The
+  audit defaults the crawler's `MaxPages`, `MaxDepth` and `Concurrency` to the
+  crawler's own defaults when the caller passes the zero value, because the
+  crawler treats `MaxDepth: 0` as "fetch only the start URL".
+- **Web hygiene.** `internal/webhygiene` runs passive checks against the
+  headers and markup the audit already fetched, plus one extra request to the
+  `http://` variant of the start URL to test the redirect to HTTPS. The
+  `X-Content-Type-Options` check fires when the header is missing or not
+  `nosniff`, matching the `Referrer-Policy` check, which fires when the header
+  is absent. The three rules (`WEB-HYGIENE-001..003`) are reported separately
+  from the SEO score.
+- **False positive decision:** web hygiene describes properties visible to any
+  visitor; it is not a vulnerability scan, and a clean result does not imply
+  the site is secure.
+- **SSRF interaction.** The audit runs the crawler with the guarded dialer and
+  the default crawl-trap limits. Auditing a loopback or private target
+  requires `GR_ALLOW_PRIVATE=1`; otherwise the network policy blocks the
+  follow-on requests and the report records the blocked robots.txt and sitemap.

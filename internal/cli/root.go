@@ -49,8 +49,8 @@ func (a *App) Execute(ctx context.Context, args []string) (code int) {
 }
 
 const rootLong = `CrawlGrade crawls a website within strict safety limits and audits its
-technical SEO: crawlability, metadata, content, structured data and internal
-linking. Passive web hygiene is reported separately.
+crawlability, metadata, content, structured data and internal linking.
+Passive web hygiene is reported separately.
 
 CrawlGrade does not predict search engine rankings.
 
@@ -63,6 +63,16 @@ Exit codes:
   5  internal error`
 
 func (a *App) newRootCommand() *cobra.Command {
+	var (
+		format   string
+		failOn   string
+		baseline string
+		diffMode bool
+		noColor  bool
+		maxPages int
+		maxDepth int
+		conc     int
+	)
 	root := &cobra.Command{
 		Use:           "crawlgrade URL [flags]",
 		Short:         "Technical SEO audit and passive web hygiene checks for a website",
@@ -74,9 +84,10 @@ func (a *App) newRootCommand() *cobra.Command {
 			if len(args) == 0 {
 				return cmd.Help()
 			}
-			return usageErrorf("auditing is not available in this build yet")
+			return runAudit(a, cmd, args[0], format, failOn, baseline, diffMode, noColor, maxPages, maxDepth, conc)
 		},
 	}
+	flags(root, &format, &failOn, &baseline, &diffMode, &noColor, &maxPages, &maxDepth, &conc)
 	root.SetOut(a.Stdout)
 	root.SetErr(a.Stderr)
 	root.SetFlagErrorFunc(func(_ *cobra.Command, err error) error {
@@ -85,4 +96,15 @@ func (a *App) newRootCommand() *cobra.Command {
 	root.CompletionOptions.DisableDefaultCmd = true
 	root.AddCommand(a.newVersionCommand())
 	return root
+}
+
+func flags(root *cobra.Command, format, failOn, baseline *string, diffMode, noColor *bool, maxPages, maxDepth, conc *int) {
+	root.Flags().StringVar(format, "format", "terminal", "report format: terminal, json or html")
+	root.Flags().StringVar(failOn, "fail-on", "", "exit 1 if a finding of this severity or higher is found: info, low, medium, high, critical")
+	root.Flags().StringVar(baseline, "baseline", "", "path to a previous JSON report to diff against")
+	root.Flags().BoolVar(diffMode, "diff", false, "print only the difference from the baseline report")
+	root.Flags().BoolVar(noColor, "no-color", false, "disable ANSI colour in the terminal report")
+	root.Flags().IntVar(maxPages, "max-pages", 0, "maximum number of pages to crawl")
+	root.Flags().IntVar(maxDepth, "max-depth", 0, "maximum link depth from the start URL")
+	root.Flags().IntVar(conc, "concurrency", 0, "maximum concurrent requests")
 }

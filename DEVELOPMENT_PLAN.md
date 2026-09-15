@@ -33,11 +33,13 @@ commits with tests.
 - [x] Unigram, bigram and trigram term strength, per page and site-wide
 - [x] Exact and near-duplicate detection
 
-## Milestone 5 - Reporting
+## Milestone 5 - Reporting (done)
 
-- [ ] Passive web hygiene checks
-- [ ] Terminal, versioned JSON and standalone escaped HTML reports
-- [ ] Baseline output and diff
+- [x] Passive web hygiene checks (`internal/webhygiene`)
+- [x] Terminal, versioned JSON and standalone escaped HTML reports (`internal/report`)
+- [x] Baseline output and diff (`--baseline`, `--diff`)
+- [x] Audit orchestration wiring crawl + analyses + report (`internal/audit`)
+- [x] CLI: `--format`, `--fail-on`, `--baseline`, `--diff`, `--no-color`, `GR_ALLOW_PRIVATE`
 
 ## Milestone 6 - Assurance and release
 

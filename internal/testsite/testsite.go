@@ -192,6 +192,10 @@ func Pages() map[string]Page {
 <li><a href="/canonical-loop">Pętla canonical</a></li>
 <li><a href="/canonical-mismatch">Canonical do innej strony</a></li>
 <li><a href="/hreflang">Hreflang</a></li>
+	<li><a href="/social">Dane społecznościowe</a></li>
+	<li><a href="/social-bad">Złe społecznościowe</a></li>
+	<li><a href="/link-a">Link A</a></li>
+	<li><a href="/link-b">Link B</a></li>
 <li><a href="/breadcrumb-jsonld">Okruszki JSON-LD</a></li>
 <li><a href="/breadcrumb-invalid">Błędne okruszki</a></li>
 <li><a href="/duplicate-content-a">Artykuł A</a></li>
@@ -268,9 +272,53 @@ func Pages() map[string]Page {
 	})
 	p["/canonical-mismatch"] = html(doc{
 		title: "Canonical do innej strony",
-		head: description("Strona wskazuje inną stronę jako kanoniczną.") +
+		head: description("Strona wskazuje inną stronę jako kanoniczny.") +
 			`<link rel="canonical" href="/good"><link rel="canonical" href="{{base}}/canonical-good">`,
 		main: `<h1>Canonical do innej strony</h1><p>Ta strona ma dwa elementy canonical, w tym jeden względny.</p>`,
+	})
+
+	// A page with consistent, valid social preview metadata.
+	p["/social"] = html(doc{
+		title: "Dane preview społecznościowego",
+		head: description("Strona z danymi preview dla sieci społecznościowych.") +
+			canonical("/social") + "\n" +
+			`<meta property="og:title" content="Salon Optyczny Przykład">` +
+			`<meta property="og:description" content="Badanie wzroku i okulary korekcyjne.">` +
+			`<meta property="og:image" content="{{base}}/img/og.jpg">` +
+			`<meta name="twitter:card" content="summary_large_image">` +
+			`<meta name="twitter:title" content="Salon Optyczny Przykład">` +
+			`<meta name="twitter:image" content="{{base}}/img/og.jpg">`,
+		main: `<h1>Dane preview</h1><p>Strona ma zgodne dane Open Graph i Twitter Card.</p>`,
+	})
+
+	// A page with inconsistent and invalid social metadata.
+	p["/social-bad"] = html(doc{
+		title: "Złe dane preview społecznościowego",
+		head: description("Strona z błędnymi danymi preview.") +
+			canonical("/social-bad") + "\n" +
+			`<meta property="og:title" content="Tytuł Open Graph">` +
+			`<meta property="og:image" content="not-a-url">` +
+			`<meta name="twitter:card" content="summary_large_image">` +
+			`<meta name="twitter:title" content="Tytuł Twitter">`,
+		main: `<h1>Złe dane preview</h1><p>Strona ma niezgodne i błędne dane preview.</p>`,
+	})
+
+	// Two pages that link to the same target with the same anchor text, so
+	// the link graph reports a repeated anchor.
+	p["/link-a"] = html(doc{
+		title: "Strona linkowa A",
+		head:  description("Strona linkowa A.") + canonical("/link-a"),
+		main:  `<h1>Link A</h1><p><a href="/link-target">see this page</a></p>`,
+	})
+	p["/link-b"] = html(doc{
+		title: "Strona linkowa B",
+		head:  description("Strona linkowa B.") + canonical("/link-b"),
+		main:  `<h1>Link B</h1><p><a href="/link-target">see this page</a></p>`,
+	})
+	p["/link-target"] = html(doc{
+		title: "Strona docelowa linków",
+		head:  description("Strona docelowa linków.") + canonical("/link-target"),
+		main:  `<h1>Link target</h1><p>Ta strona jest linkowana z dwóch stron tym samym tekstem.</p>`,
 	})
 
 	hreflangHead := `<link rel="alternate" hreflang="pl" href="{{base}}/hreflang">

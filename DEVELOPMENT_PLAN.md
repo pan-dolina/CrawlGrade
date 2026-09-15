@@ -21,10 +21,10 @@ commits with tests.
 ## Milestone 3 - Page analysis
 
 - [ ] Title, description, headings, canonical, robots meta and X-Robots-Tag
-- [ ] JSON-LD structured data and breadcrumbs (JSON-LD and microdata)
-- [ ] hreflang and html lang
-- [ ] Images, OpenGraph, Twitter cards
-- [ ] Internal link graph
+- [x] JSON-LD structured data and breadcrumbs (JSON-LD and microdata)
+- [x] hreflang
+- [x] Images, OpenGraph, Twitter cards
+- [x] Internal link graph
 
 ## Milestone 4 - Content analysis
 

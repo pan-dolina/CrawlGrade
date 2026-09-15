@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/pan-dolina/crawlgrade/internal/findings"
+	"github.com/pan-dolina/crawlgrade/internal/urlnorm"
 )
 
 func parse(t *testing.T, rawURL, body string) *Page {
@@ -14,7 +15,7 @@ func parse(t *testing.T, rawURL, body string) *Page {
 	if err != nil {
 		t.Fatal(err)
 	}
-	p, _, err := Parse([]byte(body), u, "text/html; charset=utf-8")
+	p, _, err := Parse([]byte(body), u, "text/html; charset=utf-8", urlnorm.NewScope(u))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,11 +79,11 @@ func TestLegacyCharset(t *testing.T) {
 	u, _ := url.Parse("https://example.com/")
 	// "Żółw" in ISO-8859-2.
 	body := []byte("<html><head><title>\xAF\xF3\xB3w</title></head></html>")
-	p, _, err := Parse(body, u, "text/html; charset=ISO-8859-2")
+	p, _, err := Parse(body, u, "text/html; charset=ISO-8859-2", urlnorm.NewScope(u))
 	if err != nil || p.Title() != "Żółw" {
 		t.Fatalf("title = %q err = %v", p.Title(), err)
 	}
-	p, _, _ = Parse([]byte(`<meta charset="iso-8859-2"><title>`+"\xAF\xF3\xB3w"+`</title>`), u, "text/html")
+	p, _, _ = Parse([]byte(`<meta charset="iso-8859-2"><title>`+"\xAF\xF3\xB3w"+`</title>`), u, "text/html", urlnorm.NewScope(u))
 	if p.Title() != "Żółw" {
 		t.Errorf("meta charset title = %q", p.Title())
 	}
@@ -123,7 +124,7 @@ func TestDeeplyNestedDocument(t *testing.T) {
 	u, _ := url.Parse("https://example.com/")
 	// golang.org/x/net/html refuses documents whose open element stack
 	// exceeds 512 nodes. The error must surface instead of a partial page.
-	_, _, err := Parse([]byte(strings.Repeat("<div>", 100000)+"<title>Deep</title>"), u, "text/html")
+	_, _, err := Parse([]byte(strings.Repeat("<div>", 100000)+"<title>Deep</title>"), u, "text/html", urlnorm.NewScope(u))
 	if err == nil {
 		t.Fatal("deeply nested document parsed without error")
 	}

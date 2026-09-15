@@ -201,3 +201,36 @@ CrawlGrade. Newest entries at the bottom of each section.
 - Script content is raw text in HTML: `&amp;` stays literal and a JSON
   string containing `</script>` must be escaped as `<\/script>` by the
   site. CrawlGrade does not HTML-decode JSON-LD.
+
+## Hreflang, social metadata and links
+
+- **hreflang.** A `<link rel="alternate" hreflang="…">` is recorded only when
+  both `rel` contains `alternate` and an `hreflang` attribute is present, so a
+  plain `rel="alternate"` to a print or AMP version is not mistaken for a
+  language alternate. The value is validated as an ISO 639-1 code, optionally
+  followed by a hyphen and an ISO 3166-1 region code, with `x-default` as the
+  special fallback. A page that declares alternates without a self-reference
+  is flagged, because search engines use the self-reference to confirm the
+  page is one of the alternates.
+- **Social preview.** Only `og:*` property tags and `twitter:*` meta tags are
+  collected. Conflicting `og:title`/`og:description` and their Twitter
+  equivalents are reported as `info` because most networks read the Open
+  Graph tags. An image tag whose value is not an absolute http(s) URL is
+  flagged; the pixel-size check is done later, in the link-graph analysis,
+  where the corresponding `<img>` width and height are available.
+- **Links.** Each `<a>` is resolved against the page base and classified as
+  internal or external; `<img>` src values are recorded too, so broken and
+  resource images are reported alongside broken links. Anchor text is the
+  collapsed visible text, falling back to the alt text of a single contained
+  image, matching the heading helper.
+- **Site-wide graph.** The `links` package builds the directed link graph
+  across all crawled pages. It reports indexable pages that no other page
+  links to (orphans), self links, internal targets that were linked to but
+  never fetched, and anchors reused for different targets across the site.
+  Pages that are `noindex` are excluded from the orphan and repeated-anchor
+  checks, since they carry no link authority to distribute. The analysis is a
+  pure function of the visited pages, so it is deterministic and needs no
+  network.
+- **False positive decision:** orphans are reported only for indexable
+  pages. A `noindex` page (a search-results page, a cart, a thank-you page)
+  is routinely unlinked, and flagging it would add noise to every audit.

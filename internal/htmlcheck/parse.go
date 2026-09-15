@@ -17,6 +17,8 @@ import (
 	"golang.org/x/net/html"
 	"golang.org/x/net/html/atom"
 	"golang.org/x/net/html/charset"
+
+	"github.com/pan-dolina/crawlgrade/internal/urlnorm"
 )
 
 // Limits on what is extracted from one document.
@@ -32,8 +34,16 @@ type Page struct {
 	Headings     []Heading   `json:"headings,omitempty"`
 	Canonicals   []Canonical `json:"canonicals,omitempty"`
 	Robots       Robots      `json:"robots"`
+	// Links, Images, Hreflangs and Social are populated by the walk below;
+	// they are not part of the JSON model that feeds the report.
+	Links     []Link     `json:"-"`
+	Images    []Image    `json:"-"`
+	Hreflangs []Hreflang `json:"-"`
+	Social    []Social   `json:"-"`
 
 	base *url.URL
+	// scope identifies the audited site; links outside it are external.
+	scope urlnorm.Scope
 }
 
 // MaxHeadings bounds the headings recorded per page.
@@ -57,8 +67,10 @@ func (p *Page) Description() string {
 
 // Parse parses body, served for pageURL with the given Content-Type header
 // value, and returns the page model and the document tree. The tree is
-// needed for content extraction and can be discarded afterwards.
-func Parse(body []byte, pageURL *url.URL, contentType string) (*Page, *html.Node, error) {
+// needed for content extraction and can be discarded afterwards. scope
+// identifies the audited site so that links can be classified as internal or
+// external.
+func Parse(body []byte, pageURL *url.URL, contentType string, scope urlnorm.Scope) (*Page, *html.Node, error) {
 	var r io.Reader = bytes.NewReader(body)
 	// Decode legacy encodings (for example ISO-8859-2) to UTF-8 using the
 	// Content-Type header, a BOM or <meta charset>, as browsers do.
@@ -69,7 +81,7 @@ func Parse(body []byte, pageURL *url.URL, contentType string) (*Page, *html.Node
 	if err != nil {
 		return nil, nil, err
 	}
-	p := &Page{URL: pageURL.String(), base: pageURL}
+	p := &Page{URL: pageURL.String(), base: pageURL, scope: scope}
 	p.setBase(root)
 	walk(root, func(n *html.Node) bool {
 		if n.Type != html.ElementNode || n.Namespace != "" {
@@ -84,10 +96,15 @@ func Parse(body []byte, pageURL *url.URL, contentType string) (*Page, *html.Node
 			}
 		case atom.Meta:
 			name := strings.ToLower(strings.TrimSpace(attr(n, "name")))
-			if name == "description" {
+			switch {
+			case name == "description":
 				p.Descriptions = append(p.Descriptions, clip(collapse(attr(n, "content"))))
-			} else if agent, ok := robotsAgent(name); ok {
-				p.addRobots("meta", agent, attr(n, "content"))
+			default:
+				if agent, ok := robotsAgent(name); ok {
+					p.addRobots("meta", agent, attr(n, "content"))
+				} else {
+					p.addSocial(n)
+				}
 			}
 		case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
 			if len(p.Headings) < MaxHeadings {
@@ -95,9 +112,20 @@ func Parse(body []byte, pageURL *url.URL, contentType string) (*Page, *html.Node
 			}
 			return false
 		case atom.Link:
-			if hasToken(attr(n, "rel"), "canonical") {
+			switch {
+			case hasToken(attr(n, "rel"), "canonical"):
 				p.addCanonical(attr(n, "href"), "html", inHead(n))
+			case hasToken(attr(n, "rel"), "alternate") && attr(n, "hreflang") != "":
+				if href := strings.TrimSpace(attr(n, "href")); href != "" {
+					if u, err := p.Resolve(href); err == nil {
+						p.Hreflangs = append(p.Hreflangs, Hreflang{Href: u.String(), Target: strings.TrimSpace(attr(n, "hreflang"))})
+					}
+				}
 			}
+		case atom.A:
+			p.addLink(n)
+		case atom.Img:
+			p.addImage(n)
 		case atom.Template:
 			return false
 		}

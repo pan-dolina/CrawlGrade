@@ -26,3 +26,7 @@ coverage.*
 AGENTS.md
 CLAUDE.md
 PROJECT.md
+
+# Local Go toolchain and module cache (not part of the project)
+.tools/
+.gopath/

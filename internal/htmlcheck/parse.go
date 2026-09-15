@@ -26,12 +26,17 @@ const (
 
 // Page is the parsed model of one HTML document.
 type Page struct {
-	URL          string   `json:"url"`
-	Titles       []string `json:"titles,omitempty"`
-	Descriptions []string `json:"descriptions,omitempty"`
+	URL          string      `json:"url"`
+	Titles       []string    `json:"titles,omitempty"`
+	Descriptions []string    `json:"descriptions,omitempty"`
+	Headings     []Heading   `json:"headings,omitempty"`
+	Canonicals   []Canonical `json:"canonicals,omitempty"`
 
 	base *url.URL
 }
+
+// MaxHeadings bounds the headings recorded per page.
+const MaxHeadings = 500
 
 // Title returns the first title, or "" if there is none.
 func (p *Page) Title() string {
@@ -80,6 +85,15 @@ func Parse(body []byte, pageURL *url.URL, contentType string) (*Page, *html.Node
 			name := strings.ToLower(strings.TrimSpace(attr(n, "name")))
 			if name == "description" {
 				p.Descriptions = append(p.Descriptions, clip(collapse(attr(n, "content"))))
+			}
+		case atom.H1, atom.H2, atom.H3, atom.H4, atom.H5, atom.H6:
+			if len(p.Headings) < MaxHeadings {
+				p.Headings = append(p.Headings, Heading{Level: int(n.Data[1] - '0'), Text: clip(headingText(n))})
+			}
+			return false
+		case atom.Link:
+			if hasToken(attr(n, "rel"), "canonical") {
+				p.addCanonical(attr(n, "href"), "html", inHead(n))
 			}
 		case atom.Template:
 			return false

@@ -15,7 +15,7 @@ func extract(t *testing.T, doc string) *Result {
 	if err != nil {
 		t.Fatal(err)
 	}
-	return Extract(root)
+	return Extract(root, nil)
 }
 
 func script(body string) string {

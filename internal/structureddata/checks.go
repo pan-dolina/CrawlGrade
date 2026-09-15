@@ -42,14 +42,14 @@ type typeRule struct {
 }
 
 var typeRules = map[string]typeRule{
-	"Organization":   {required: [][]string{{"name"}}, recommended: []string{"url", "logo"}},
-	"LocalBusiness":  {required: [][]string{{"name"}, {"address"}}, recommended: []string{"telephone", "openingHoursSpecification", "url"}},
-	"WebSite":        {required: [][]string{{"name", "url"}}, recommended: []string{"url"}},
-	"WebPage":        {required: [][]string{{"name", "url", "headline"}}},
-	"Article":        {required: [][]string{{"headline"}}, recommended: []string{"author", "datePublished", "image"}},
-	"Product":        {required: [][]string{{"name"}, {"offers", "review", "aggregateRating"}}, recommended: []string{"image", "description"}},
-	"BreadcrumbList": {required: [][]string{{"itemListElement"}}},
-	"FAQPage":        {required: [][]string{{"mainEntity"}}},
+	"Organization":  {required: [][]string{{"name"}}, recommended: []string{"url", "logo"}},
+	"LocalBusiness": {required: [][]string{{"name"}, {"address"}}, recommended: []string{"telephone", "openingHoursSpecification", "url"}},
+	"WebSite":       {required: [][]string{{"name", "url"}}, recommended: []string{"url"}},
+	"WebPage":       {required: [][]string{{"name", "url", "headline"}}},
+	"Article":       {required: [][]string{{"headline"}}, recommended: []string{"author", "datePublished", "image"}},
+	"Product":       {required: [][]string{{"name"}, {"offers", "review", "aggregateRating"}}, recommended: []string{"image", "description"}},
+	// BreadcrumbList has dedicated validation in breadcrumbs.go.
+	"FAQPage": {required: [][]string{{"mainEntity"}}},
 }
 
 var urlProps = []string{"url", "logo", "image", "sameAs", "item"}

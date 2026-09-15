@@ -12,6 +12,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"net/url"
 	"slices"
 	"sort"
 	"strings"
@@ -55,6 +56,7 @@ type Result struct {
 	Untyped       []string     `json:"-"`
 	ContextIssues []string     `json:"-"`
 	Truncated     bool         `json:"truncated,omitempty"`
+	Microdata     []MicroItem  `json:"microdata,omitempty"`
 }
 
 // Types returns the distinct schema.org types found, sorted.
@@ -63,12 +65,16 @@ func (r *Result) Types() []string {
 	for _, it := range r.Items {
 		out = append(out, it.Types...)
 	}
+	for _, m := range r.Microdata {
+		out = append(out, m.Types...)
+	}
 	sort.Strings(out)
 	return slices.Compact(out)
 }
 
 // Extract collects JSON-LD blocks and microdata from a parsed document.
-func Extract(root *html.Node) *Result {
+// base resolves relative URLs in microdata; it may be nil.
+func Extract(root *html.Node, base *url.URL) *Result {
 	r := &Result{}
 	var scripts []string
 	walk(root, func(n *html.Node) bool {
@@ -95,6 +101,7 @@ func Extract(root *html.Node) *Result {
 		r.Blocks++
 		r.parseBlock(i+1, s)
 	}
+	r.Microdata = extractMicrodata(root, base)
 	return r
 }
 
@@ -301,10 +308,6 @@ func walk(root *html.Node, visit func(*html.Node) bool) {
 }
 
 func attr(n *html.Node, key string) string {
-	for _, a := range n.Attr {
-		if a.Namespace == "" && a.Key == key {
-			return a.Val
-		}
-	}
-	return ""
+	v, _ := attrOK(n, key)
+	return v
 }

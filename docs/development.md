@@ -76,3 +76,23 @@ CrawlGrade. Newest entries at the bottom of each section.
 - Site scope ignores a leading `www.` and the scheme, and includes a
   non-default port. `http://example.com` redirecting to
   `https://www.example.com` is therefore an internal redirect.
+
+## Crawler limits
+
+- The crawl is level-synchronous (ADR 0002). An early version with a shared
+  queue produced different page sets for `--concurrency 1` and `8` under
+  `--max-pages`; `TestCrawlBreadthFirstAndDeterministic` now pins the order.
+- URL admission (seen set, robots, trap guard, queue limit) runs on the
+  coordinating goroutine between levels, so the trap guard needs no locking
+  and its decisions do not depend on which worker finished first.
+- Response bodies are dropped as soon as `Process` has analysed a page.
+  Memory therefore scales with the page models, not with raw HTML.
+- URLs whose extension names a non-HTML file (`.pdf`, images, archives, ...)
+  are checked with `HEAD`: their status matters for broken-link detection
+  but their bodies are never needed. They count towards `--max-pages`, which
+  bounds the total number of requests rather than only HTML pages.
+- `--max-depth 0` is meaningful (audit only the start URL), so unlike the
+  other limits a zero depth is not replaced by the default.
+- The rate limiter spaces request starts evenly (`1/rps`) and is consulted
+  before every redirect hop, not only before each page, so redirect chains
+  cannot bypass `--requests-per-second`.

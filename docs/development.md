@@ -180,3 +180,24 @@ CrawlGrade. Newest entries at the bottom of each section.
   because excluding pages (search results, carts, thank-you pages) is
   routine. It is `critical` only on the audited start URL, and sitemap
   comparisons raise noindex URLs that are listed in a sitemap separately.
+
+## Structured data
+
+- JSON-LD is decoded with `encoding/json` (`UseNumber`, so large numbers are
+  not rounded) after checking the block size (1 MiB). Trailing data after
+  the top-level value is an error; browsers ignore it, but search engines
+  reject the block.
+- Type names are normalized from `Product`, `schema:Product` and
+  `https://schema.org/Product`. Common subtypes (`BlogPosting`, `Optician`,
+  `Store`, ...) map to the recognized type whose checks apply.
+- **False positive decision:** recommended properties are only checked on
+  top-level items. Nested entities such as an Article's `author` Person or a
+  `publisher` Organization rarely carry logos and URLs, and flagging them
+  would add a finding to nearly every article. Required properties are
+  still checked on nested items.
+- The walker visits object keys in sorted order and stops after 10 000 nodes
+  or 32 levels, so evidence paths are deterministic and hostile blocks
+  cannot make traversal unbounded.
+- Script content is raw text in HTML: `&amp;` stays literal and a JSON
+  string containing `</script>` must be escaped as `<\/script>` by the
+  site. CrawlGrade does not HTML-decode JSON-LD.

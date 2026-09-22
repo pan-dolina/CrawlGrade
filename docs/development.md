@@ -392,3 +392,9 @@ was retained; missing return links use the new SEO-HREFLANG-007 instead.
   `gofmt -l cmd internal test`; gosec excludes only those two cache directories.
   The local testsite intentionally serves hostile HTML; its G705 suppression
   documents that purpose. Baseline file reading is explicitly user-directed.
+- HTML report sections (terms, quick wins, findings by severity, pages) are
+  collapsible with standard `<details>` elements, summary headings and badge
+  counts. Headline stats link directly to corresponding finding sections with
+  smooth scrolling and `:target` highlight rings. A floating back-to-top button
+  provides quick navigation back to the report header in light and dark modes.
+

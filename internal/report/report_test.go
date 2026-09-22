@@ -144,6 +144,9 @@ func TestRenderHTMLQuickWins(t *testing.T) {
 	if !strings.Contains(b.String(), "Quick wins") || !strings.Contains(b.String(), "Fix this") || strings.Contains(b.String(), "No findings.") {
 		t.Fatal(b.String())
 	}
+	if strings.Contains(b.String(), "href=\"#findings-") {
+		t.Errorf("quick-wins mode should not link to absent findings sections:\n%s", b.String())
+	}
 }
 
 func TestRenderHTML(t *testing.T) {
@@ -200,8 +203,26 @@ func TestRenderHTMLPrioritizesTermsAndCollapsesDetails(t *testing.T) {
 	if !(termsAt < quickWinsAt && quickWinsAt < detailsAt) {
 		t.Fatalf("HTML sections are out of order: terms=%d quick-wins=%d details=%d", termsAt, quickWinsAt, detailsAt)
 	}
-	if !strings.Contains(out, "<details>") || !strings.Contains(out, "Critical issue") || !strings.Contains(out, "Low issue") {
+	if !strings.Contains(out, "<details") || !strings.Contains(out, "Critical issue") || !strings.Contains(out, "Low issue") {
 		t.Fatalf("HTML missing collapsible finding details:\n%s", out)
+	}
+	for _, want := range []string{
+		"href=\"#findings-critical\"",
+		"id=\"findings-critical\"",
+		"href=\"#findings-low\"",
+		"id=\"findings-low\"",
+		"id=\"terms\"",
+		"id=\"quick-wins\"",
+		"href=\"#top\"",
+		"class=\"to-top\"",
+		"Do góry",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("HTML missing navigation element %q", want)
+		}
+	}
+	if strings.Contains(out, "href=\"#findings-high\"") {
+		t.Errorf("HTML contains link to zero-count severity: findings-high")
 	}
 }
 

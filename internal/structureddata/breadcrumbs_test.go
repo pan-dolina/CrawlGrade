@@ -90,7 +90,7 @@ func TestMicrodataBreadcrumbs(t *testing.T) {
 
 func TestMicrodataValues(t *testing.T) {
 	r := extractAt(t, "https://example.com/dir/", `<div itemscope itemtype="https://schema.org/Product">
-<span itemprop="name brand"> Okulary   X </span>
+<span itemprop="name brand"> Archiwum   X </span>
 <img itemprop="image" src="a.jpg">
 <time itemprop="releaseDate" datetime="2026-01-01">1 stycznia</time>
 <data itemprop="sku" value="123">SKU</data>
@@ -103,7 +103,7 @@ func TestMicrodataValues(t *testing.T) {
 	}
 	p := r.Microdata[0].Props
 	checks := map[string]string{
-		"name": "Okulary X", "brand": "Okulary X", "image": "https://example.com/dir/a.jpg",
+		"name": "Archiwum X", "brand": "Archiwum X", "image": "https://example.com/dir/a.jpg",
 		"releaseDate": "2026-01-01", "sku": "123", "availability": "https://schema.org/InStock",
 	}
 	for k, want := range checks {

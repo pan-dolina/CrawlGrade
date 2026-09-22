@@ -5,10 +5,10 @@ import "testing"
 func TestExtractKeepsMainText(t *testing.T) {
 	body := `<html><head><title>x</title></head><body>
 	<nav><a href="/">Home</a><a href="/about">About</a></nav>
-	<main><h1>Badanie wzroku</h1>
-	<p>Badanie wzroku to pierwszy krok do dobrze dobranych okularów. Optometrysta sprawdza ostrość widzenia.</p>
-	<h2>Okulary korekcyjne</h2>
-	<p>Na podstawie wyniku badania wzroku optometrysta dobiera okulary korekcyjne.</p>
+	<main><h1>Analiza archiwum</h1>
+	<p>Analiza archiwum to pierwszy krok do dobrze dobranych okularów. Archiwista sprawdza ostrość odczytu.</p>
+	<h2>Archiwum korekcyjne</h2>
+	<p>Na podstawie wyniku analizy archiwum archiwista dobiera archiwum korekcyjne.</p>
 	</main></body></html>`
 	r := Extract("https://example.com/", body)
 	if r.URL != "https://example.com/" {
@@ -27,7 +27,7 @@ func TestExtractKeepsMainText(t *testing.T) {
 	if contains(r.Text, "console") {
 		t.Fatalf("nav/script text leaked: %q", r.Text)
 	}
-	if !contains(r.Text, "Badanie wzroku") {
+	if !contains(r.Text, "Analiza archiwum") {
 		t.Fatalf("expected article text, got %q", r.Text)
 	}
 }

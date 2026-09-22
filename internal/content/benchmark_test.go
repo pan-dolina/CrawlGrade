@@ -6,7 +6,7 @@ import (
 )
 
 func BenchmarkExtract(b *testing.B) {
-	body := "<main>" + strings.Repeat("<p>Badanie wzroku i okulary korekcyjne.</p>", 100) + "</main>"
+	body := "<main>" + strings.Repeat("<p>Analiza archiwum i archiwum korekcyjne.</p>", 100) + "</main>"
 	b.ReportAllocs()
 	for b.Loop() {
 		Extract("https://example.com/", body)

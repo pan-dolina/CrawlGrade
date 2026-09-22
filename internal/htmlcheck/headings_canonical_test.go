@@ -17,7 +17,7 @@ func TestHeadings(t *testing.T) {
 		{"multiple", `<h1>A</h1><h1>B</h1>`, "SEO-HEADING-002", CheckOptions{}},
 		{"multiple allowed", `<h1>A</h1><h1>B</h1>`, "", CheckOptions{AllowMultipleH1: true}},
 		{"empty", `<h1>A</h1><h2> </h2>`, "SEO-HEADING-003", CheckOptions{}},
-		{"logo h1", `<h1><img src="logo.png" alt="Salon Optyczny"></h1>`, "", CheckOptions{}},
+		{"logo h1", `<h1><img src="logo.png" alt="Salon Archiwalny"></h1>`, "", CheckOptions{}},
 		{"skip", `<h1>A</h1><h3>B</h3>`, "SEO-HEADING-004", CheckOptions{}},
 		{"svg ignored", `<h1>A</h1><svg><h2>x</h2></svg>`, "", CheckOptions{}},
 	}

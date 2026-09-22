@@ -13,7 +13,7 @@ go build -o bin/crawlgrade ./cmd/crawlgrade
 bin/crawlgrade https://example.com --max-pages 100
 bin/crawlgrade https://example.com --json --output baseline.json
 bin/crawlgrade https://example.com --format html --output report.html
-bin/crawlgrade https://example.com --keywords 'technical SEO,badanie wzroku'
+bin/crawlgrade https://example.com --keywords 'technical SEO,analiza archiwum'
 bin/crawlgrade diff baseline.json current.json --json
 ```
 

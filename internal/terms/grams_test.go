@@ -31,17 +31,17 @@ func TestGramsEmpty(t *testing.T) {
 
 func TestTopCounts(t *testing.T) {
 	counts := map[string]int{
-		"okulary korekcyjne": 3,
-		"okulary":            3,
-		"progresywne":        1,
-		"oprawki":            2,
+		"archiwum korekcyjne": 3,
+		"archiwum":            3,
+		"progresywne":         1,
+		"okładki":             2,
 	}
 	top := Top(counts, 2)
 	if len(top) != 2 {
 		t.Fatalf("got %v", top)
 	}
-	// Ties broken alphabetically: "okulary" before "okulary korekcyjne".
-	if top[0].String() != "okulary" || top[1].String() != "okulary korekcyjne" {
+	// Ties broken alphabetically: "archiwum" before "archiwum korekcyjne".
+	if top[0].String() != "archiwum" || top[1].String() != "archiwum korekcyjne" {
 		t.Fatalf("got %v", top)
 	}
 }

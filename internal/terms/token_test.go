@@ -5,8 +5,8 @@ import (
 )
 
 func TestTokenizeDropsStopwordsAndPunctuation(t *testing.T) {
-	got := Tokenize("Okulary, korekcyjne — i okulary progresywne!")
-	want := []string{"okulary", "korekcyjne", "okulary", "progresywne"}
+	got := Tokenize("Archiwum, korekcyjne — i archiwum progresywne!")
+	want := []string{"archiwum", "korekcyjne", "archiwum", "progresywne"}
 	if len(got) != len(want) {
 		t.Fatalf("got %v, want %v", got, want)
 	}
@@ -18,8 +18,8 @@ func TestTokenizeDropsStopwordsAndPunctuation(t *testing.T) {
 }
 
 func TestTokenizeLowercases(t *testing.T) {
-	got := Tokenize("OKULARY Korekcyjne")
-	if len(got) != 2 || got[0] != "okulary" || got[1] != "korekcyjne" {
+	got := Tokenize("ARCHIWUM Korekcyjne")
+	if len(got) != 2 || got[0] != "archiwum" || got[1] != "korekcyjne" {
 		t.Fatalf("got %v", got)
 	}
 }

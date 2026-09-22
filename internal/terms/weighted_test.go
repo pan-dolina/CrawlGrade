@@ -3,8 +3,8 @@ package terms
 import "testing"
 
 func TestWeightedZonesAndKeywords(t *testing.T) {
-	r := Weigh([]Zones{{URL: "a", Title: "optometrysta", Body: "okulary"}, {URL: "b", Body: "okulary"}}, []string{"absent"})
-	if r.Pages["a"][0].Term != "optometrysta" || r.Pages["a"][0].Strength != 100 {
+	r := Weigh([]Zones{{URL: "a", Title: "archiwista", Body: "archiwum"}, {URL: "b", Body: "archiwum"}}, []string{"absent"})
+	if r.Pages["a"][0].Term != "archiwista" || r.Pages["a"][0].Strength != 100 {
 		t.Fatal(r)
 	}
 	for _, list := range r.Pages {

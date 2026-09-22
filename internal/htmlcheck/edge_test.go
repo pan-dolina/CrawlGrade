@@ -10,7 +10,7 @@ import (
 
 func TestTitleEdgeCases(t *testing.T) {
 	cases := map[string]string{
-		`<title>Okulary &amp; oprawki &ndash; salon</title>`:         "Okulary & oprawki – salon",
+		`<title>Archiwum &amp; okładki &ndash; salon</title>`:        "Archiwum & okładki – salon",
 		`<title>Tytuł z <b>tagiem</b> w środku</title>`:              "Tytuł z <b>tagiem</b> w środku",
 		"<title>\n\t Nowa\nlinia \r\n</title>":                       "Nowa linia",
 		`<title>&nbsp;&#8203;</title>`:                               "\xe2\x80\x8b",
@@ -29,7 +29,7 @@ func TestTitleEdgeCases(t *testing.T) {
 		t.Errorf("whitespace-only title: %s", ids(p.MetadataFindings()))
 	}
 	// A second <title> in the body is ignored when the head has one.
-	p = parse(t, "https://example.com/", `<head><title>Salon optyczny w Warszawie</title></head><body><title>Body</title></body>`)
+	p = parse(t, "https://example.com/", `<head><title>Salon archiwalny w regionie</title></head><body><title>Body</title></body>`)
 	if len(p.Titles) != 1 {
 		t.Errorf("titles = %q", p.Titles)
 	}

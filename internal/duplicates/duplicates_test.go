@@ -11,7 +11,7 @@ func mkPage(url, text string) *content.Result {
 }
 
 func TestAnalyzeExactDuplicates(t *testing.T) {
-	text := `<h1>Badanie wzroku</h1><p>Badanie wzroku to pierwszy krok do dobrze dobranych okularów.</p>`
+	text := `<h1>Analiza archiwum</h1><p>Analiza archiwum to pierwszy krok do dobrze dobranych okularów.</p>`
 	pages := []*Page{
 		NewPage(mkPage("https://example.com/a", text)),
 		NewPage(mkPage("https://example.com/b", text)),
@@ -31,9 +31,9 @@ func TestAnalyzeExactDuplicates(t *testing.T) {
 }
 
 func TestAnalyzeNearDuplicates(t *testing.T) {
-	base := `<h1>Okulary korekcyjne</h1><p>Badanie wzroku to pierwszy krok do dobrze dobranych okularów korekcyjnych.</p>`
+	base := `<h1>Archiwum korekcyjne</h1><p>Analiza archiwum to pierwszy krok do dobrze dobranych archiwów korekcyjnych. Analiza archiwum pomaga porządkować archiwum korekcyjne.</p>`
 	// One word changed.
-	alt := `<h1>Okulary korekcyjne</h1><p>Badanie wzroku to pierwszy krok do dobrze dobranych okularów korekcyjnych innych.</p>`
+	alt := `<h1>Archiwum korekcyjne</h1><p>Analiza archiwum to pierwszy krok do dobrze dobranych archiwów korekcyjnych. Analiza archiwum pomaga porządkować archiwum historyczne.</p>`
 	pages := []*Page{
 		NewPage(mkPage("https://example.com/a", base)),
 		NewPage(mkPage("https://example.com/b", alt)),
@@ -46,7 +46,7 @@ func TestAnalyzeNearDuplicates(t *testing.T) {
 
 func TestAnalyzeDistinct(t *testing.T) {
 	pages := []*Page{
-		NewPage(mkPage("https://example.com/a", `<h1>Okulary korekcyjne</h1><p>Badanie wzroku.</p>`)),
+		NewPage(mkPage("https://example.com/a", `<h1>Archiwum korekcyjne</h1><p>Analiza archiwum.</p>`)),
 		NewPage(mkPage("https://example.com/b", `<h1>Oprawki tytanowe</h1><p>Zupełnie inny temat strony.</p>`)),
 	}
 	r := Analyze(pages)
@@ -56,7 +56,7 @@ func TestAnalyzeDistinct(t *testing.T) {
 }
 
 func TestFindings(t *testing.T) {
-	text := `<h1>Badanie wzroku</h1><p>Badanie wzroku to pierwszy krok.</p>`
+	text := `<h1>Analiza archiwum</h1><p>Analiza archiwum to pierwszy krok.</p>`
 	pages := []*Page{
 		NewPage(mkPage("https://example.com/a", text)),
 		NewPage(mkPage("https://example.com/b", text)),

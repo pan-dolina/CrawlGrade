@@ -36,7 +36,7 @@ func TestRecognizedTypes(t *testing.T) {
 		{"@type":"WebSite","name":"Salon","url":"https://example.com/"},
 		{"@type":"WebPage","name":"Home"}
 	]}`) + script(`[{"@context":"http://schema.org/","@type":["LocalBusiness","Optician"],"name":"Salon","address":"ul. Testowa 1","telephone":"1","openingHoursSpecification":{"opens":"09:00"},"url":"/"}]`) +
-		script(`{"@context":{"@vocab":"https://schema.org/"},"@type":"schema:Product","name":"Okulary","offers":{"@type":"Offer","price":"100"},"image":"a.jpg","description":"d"}`) +
+		script(`{"@context":{"@vocab":"https://schema.org/"},"@type":"schema:Product","name":"Archiwum","offers":{"@type":"Offer","price":"100"},"image":"a.jpg","description":"d"}`) +
 		script(`{"@context":"https://schema.org","@type":"https://schema.org/Article","headline":"H","author":{"@type":"Person","name":"A"},"datePublished":"2026-01-01","image":["https://example.com/a.jpg"]}`) +
 		script(`{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Q","acceptedAnswer":{"@type":"Answer","text":"A"}}]}`) +
 		script(`{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://example.com/"}]}`)
@@ -57,7 +57,7 @@ func TestJSONLDProblems(t *testing.T) {
 	cases := []struct {
 		name, doc, want string
 	}{
-		{"syntax", script(`{"@context":"https://schema.org","@type":"Product", "name": "Okulary" `), "SEO-SCHEMA-001"},
+		{"syntax", script(`{"@context":"https://schema.org","@type":"Product", "name": "Archiwum" `), "SEO-SCHEMA-001"},
 		{"trailing comma", script(`{"@type":"Thing",}`), "SEO-SCHEMA-001"},
 		{"extra data", script(`{"@context":"https://schema.org","@type":"Thing"} {"x":1}`), "SEO-SCHEMA-001"},
 		{"empty", script(`   `), "SEO-SCHEMA-001"},

@@ -94,14 +94,14 @@ const nav = `<header class="site-header">
 <nav class="main-nav"><ul>
 <li><a href="/">Strona główna</a></li>
 <li><a href="/good">Oferta salonu</a></li>
-<li><a href="/keyword-page">Badanie wzroku</a></li>
+<li><a href="/keyword-page">Analiza archiwum</a></li>
 <li><a href="/hreflang">Wersje językowe</a></li>
 <li><a href="/breadcrumb-jsonld">Kontakt z salonem</a></li>
 </ul></nav>
 </header>`
 
 const footer = `<footer class="site-footer">
-<p>Salon Optyczny Przykład sp. z o.o., ul. Testowa 1, 00-001 Warszawa. Wszelkie prawa zastrzeżone.</p>
+<p>Salon Archiwalny Przykład sp. z o.o., ul. Testowa 1, 00-001 regionie. Wszelkie prawa zastrzeżone.</p>
 <p><a href="/good">Polityka prywatności</a> <a href="/breadcrumb-jsonld">Regulamin sklepu</a></p>
 </footer>`
 
@@ -141,42 +141,42 @@ func description(s string) string {
 	return `<meta name="description" content="` + s + `">`
 }
 
-const goodDescription = "Salon optyczny w Warszawie: badanie wzroku u optometrysty, okulary korekcyjne i progresywne, szeroki wybór oprawek."
+const goodDescription = "Archiwum testowe w regionie: analiza archiwum, katalogi korekcyjne i progresywne, szeroki wybór okładek."
 
-const social = `<meta property="og:title" content="Salon Optyczny Przykład">
-<meta property="og:description" content="Badanie wzroku i okulary korekcyjne w Warszawie.">
+const social = `<meta property="og:title" content="Salon Archiwalny Przykład">
+<meta property="og:description" content="Analiza archiwum i archiwum korekcyjne w regionie.">
 <meta property="og:image" content="{{base}}/img/og.jpg">
 <meta property="og:url" content="{{base}}/good">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Salon Optyczny Przykład">
-<meta name="twitter:description" content="Badanie wzroku i okulary korekcyjne.">
+<meta name="twitter:title" content="Salon Archiwalny Przykład">
+<meta name="twitter:description" content="Analiza archiwum i archiwum korekcyjne.">
 <meta name="twitter:image" content="{{base}}/img/og.jpg">`
 
 // sharedArticle is the main content of the duplicate-content fixtures.
-const sharedArticle = `<h1>Jak dobrać oprawki do kształtu twarzy</h1>
-<p>Dobór oprawek zaczyna się od oceny kształtu twarzy. Osoby o twarzy okrągłej zwykle wybierają oprawki prostokątne, które optycznie wydłużają rysy. Przy twarzy kwadratowej sprawdzają się oprawki owalne lub okrągłe, łagodzące mocną linię żuchwy.</p>
-<p>Twarz pociągła dobrze wygląda w szerokich oprawkach z wyraźnym górnym brzegiem. Twarz w kształcie serca równoważą oprawki cięższe w dolnej części. Warto pamiętać, że szerokość oprawek powinna odpowiadać szerokości twarzy w najszerszym miejscu.</p>
-<p>Znaczenie ma także kolor. Ciepłe odcienie oprawek pasują do cery o złotym podtonie, a chłodne do cery różowej. Optyk pomoże dopasować mostek i zauszniki tak, aby okulary nie uciskały nosa ani skroni podczas całodziennego noszenia.</p>
-<p>Przed zakupem nowych oprawek dobrze jest wykonać aktualne badanie wzroku. Moc soczewek wpływa na grubość szkieł, a to z kolei na wybór odpowiedniej oprawy. Grube soczewki lepiej maskują mniejsze oprawki o pełnym obramowaniu.</p>`
+const sharedArticle = `<h1>Jak dobrać okładki do kształtu szablonu</h1>
+<p>Dobór oprawek zaczyna się od oceny kształtu twarzy. Osoby o twarzy okrągłej zwykle wybierają okładki prostokątne, które optycznie wydłużają rysy. Przy twarzy kwadratowej sprawdzają się okładki owalne lub okrągłe, łagodzące mocną linię żuchwy.</p>
+<p>Twarz pociągła dobrze wygląda w szerokich oprawkach z wyraźnym górnym brzegiem. Twarz w kształcie serca równoważą okładki cięższe w dolnej części. Warto pamiętać, że szerokość oprawek powinna odpowiadać szerokości twarzy w najszerszym miejscu.</p>
+<p>Znaczenie ma także kolor. Ciepłe odcienie oprawek pasują do cery o złotym podtonie, a chłodne do cery różowej. Optyk pomoże dopasować mostek i zauszniki tak, aby archiwum nie uciskały nosa ani skroni podczas całodziennego noszenia.</p>
+<p>Przed zakupem nowych okładek dobrze jest wykonać aktualną analizę archiwum. Zebrane dane wpływają na wybór odpowiedniej oprawy. Grube zakładki lepiej maskują mniejsze okładki o pełnym obramowaniu.</p>`
 
 // Pages returns the fixed endpoints.
 func Pages() map[string]Page {
 	p := map[string]Page{}
 
 	p["/"] = html(doc{
-		title: "Salon Optyczny Przykład – badanie wzroku i okulary w Warszawie",
-		head: description("Salon optyczny w centrum Warszawy. Badanie wzroku, okulary korekcyjne, soczewki kontaktowe i naprawa okularów.") +
+		title: "Salon Archiwalny Przykład – analiza archiwum i archiwum w regionie",
+		head: description("Archiwum testowe w centrum regionu. Analiza archiwum, katalogi i zakładki tematyczne.") +
 			canonical("/") + "\n" + social + `
 <link rel="alternate" hreflang="pl" href="{{base}}/">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@graph":[
- {"@type":"Organization","name":"Salon Optyczny Przykład","url":"{{base}}/","logo":"{{base}}/img/logo.png"},
- {"@type":"WebSite","name":"Salon Optyczny Przykład","url":"{{base}}/"}
+ {"@type":"Organization","name":"Salon Archiwalny Przykład","url":"{{base}}/","logo":"{{base}}/img/logo.png"},
+ {"@type":"WebSite","name":"Salon Archiwalny Przykład","url":"{{base}}/"}
 ]}
 </script>`,
-		main: `<h1>Salon optyczny Przykład</h1>
-<p>Zapraszamy do salonu optycznego w centrum Warszawy. Wykonujemy badanie wzroku, dobieramy okulary korekcyjne i soczewki kontaktowe.</p>
+		main: `<h1>Salon archiwalny Przykład</h1>
+<p>Zapraszamy do archiwum testowego w centrum regionu. Wykonujemy analizę archiwum, dobieramy katalogi i zakładki tematyczne.</p>
 <img src="/img/salon.jpg" alt="Wnętrze salonu optycznego" width="800" height="600">
 <h2>Strony testowe</h2>
 <ul class="fixtures">
@@ -201,7 +201,7 @@ func Pages() map[string]Page {
 <li><a href="/duplicate-content-a">Artykuł A</a></li>
 <li><a href="/duplicate-content-b">Artykuł B</a></li>
 <li><a href="/near-duplicate">Artykuł C</a></li>
-<li><a href="/keyword-page">Badanie wzroku i okulary</a></li>
+<li><a href="/keyword-page">Analiza archiwum i archiwum</a></li>
 <li><a href="/headings">Nagłówki</a></li>
 <li><a href="/images">Obrazy</a></li>
 <li><a href="/xss">Wrogie dane</a></li>
@@ -215,17 +215,17 @@ func Pages() map[string]Page {
 	})
 
 	p["/good"] = html(doc{
-		title: "Oferta salonu optycznego – okulary korekcyjne i oprawki",
+		title: "Oferta salonu optycznego – archiwum korekcyjne i okładki",
 		head: description(goodDescription) + canonical("/good") + "\n" + social + `
 <meta name="robots" content="index, follow, max-image-preview:large">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Oferta salonu","url":"{{base}}/good"}</script>`,
 		main: `<h1>Oferta salonu optycznego</h1>
-<p>W naszej ofercie znajdziesz okulary korekcyjne, okulary przeciwsłoneczne z filtrem UV oraz nowoczesne oprawki renomowanych marek.</p>
-<h2>Okulary korekcyjne</h2>
-<p>Każde okulary korekcyjne wykonujemy na podstawie aktualnego badania wzroku.</p>
+<p>W naszej ofercie znajdziesz archiwum korekcyjne, archiwum przeciwsłoneczne z filtrem UV oraz nowoczesne okładki renomowanych marek.</p>
+<h2>Archiwum korekcyjne</h2>
+		<p>Każdy katalog przygotowujemy na podstawie aktualnej analizy archiwum.</p>
 <h2>Oprawki</h2>
 <p>Oprawki metalowe, acetatowe i tytanowe dobieramy do kształtu twarzy.</p>
-<img src="/img/oprawki.jpg" alt="Oprawki na półce" width="640" height="480" loading="lazy">`,
+<img src="/img/okładki.jpg" alt="Oprawki na półce" width="640" height="480" loading="lazy">`,
 	})
 
 	p["/missing-title"] = html(doc{
@@ -235,7 +235,7 @@ func Pages() map[string]Page {
 	})
 
 	p["/duplicate-title"] = html(doc{
-		title: "Oferta salonu optycznego – okulary korekcyjne i oprawki",
+		title: "Oferta salonu optycznego – archiwum korekcyjne i okładki",
 		head:  description(goodDescription) + canonical("/duplicate-title"),
 		main:  `<h1>Druga oferta</h1><p>Ta strona ma ten sam tytuł i opis co strona z ofertą salonu, ale inną treść o naprawie okularów.</p>`,
 	})
@@ -282,11 +282,11 @@ func Pages() map[string]Page {
 		title: "Dane preview społecznościowego",
 		head: description("Strona z danymi preview dla sieci społecznościowych.") +
 			canonical("/social") + "\n" +
-			`<meta property="og:title" content="Salon Optyczny Przykład">` +
-			`<meta property="og:description" content="Badanie wzroku i okulary korekcyjne.">` +
+			`<meta property="og:title" content="Salon Archiwalny Przykład">` +
+			`<meta property="og:description" content="Analiza archiwum i archiwum korekcyjne.">` +
 			`<meta property="og:image" content="{{base}}/img/og.jpg">` +
 			`<meta name="twitter:card" content="summary_large_image">` +
-			`<meta name="twitter:title" content="Salon Optyczny Przykład">` +
+			`<meta name="twitter:title" content="Salon Archiwalny Przykład">` +
 			`<meta name="twitter:image" content="{{base}}/img/og.jpg">`,
 		main: `<h1>Dane preview</h1><p>Strona ma zgodne dane Open Graph i Twitter Card.</p>`,
 	})
@@ -350,7 +350,7 @@ func Pages() map[string]Page {
 	})
 
 	p["/breadcrumb-jsonld"] = html(doc{
-		title: "Kontakt z salonem optycznym",
+		title: "Kontakt z salonem archiwalnym",
 		head: description("Dane kontaktowe salonu optycznego.") + canonical("/breadcrumb-jsonld") + `
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
@@ -359,12 +359,12 @@ func Pages() map[string]Page {
  {"@type":"ListItem","position":3,"name":"Kontakt"}
 ]}
 </script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Salon Optyczny Przykład","address":{"@type":"PostalAddress","streetAddress":"ul. Testowa 1","addressLocality":"Warszawa"},"telephone":"+48 22 000 00 00"}</script>`,
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"LocalBusiness","name":"Salon Archiwalny Przykład","address":{"@type":"PostalAddress","streetAddress":"ul. Testowa 1","addressLocality":"regionie"},"telephone":"+48 22 000 00 00"}</script>`,
 		main: `<ol class="breadcrumbs" itemscope itemtype="https://schema.org/BreadcrumbList">
 <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="/"><span itemprop="name">Strona główna</span></a><meta itemprop="position" content="1"></li>
 <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem"><a itemprop="item" href="/good"><span itemprop="name">Salon</span></a><meta itemprop="position" content="2"></li>
 </ol>
-<h1>Kontakt</h1><p>Salon jest otwarty od poniedziałku do soboty. Zapraszamy na badanie wzroku bez wcześniejszej rejestracji.</p>`,
+<h1>Kontakt</h1><p>Archiwum jest dostępne od poniedziałku do soboty. Zapraszamy na analizę archiwum bez wcześniejszej rejestracji.</p>`,
 	})
 
 	p["/breadcrumb-invalid"] = html(doc{
@@ -378,41 +378,41 @@ func Pages() map[string]Page {
  {"@type":"Thing","name":"Nie ListItem"}
 ]}
 </script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product", "name": "Okulary" </script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Product", "name": "Archiwum" </script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Ile trwa badanie?"}]}</script>`,
 		main: `<div itemscope itemtype="https://schema.org/BreadcrumbList"><span itemprop="itemListElement">Brak ListItem</span></div>
 <h1>Błędne okruszki</h1><p>Dane strukturalne na tej stronie zawierają celowe błędy.</p>`,
 	})
 
 	p["/duplicate-content-a"] = html(doc{
-		title: "Jak dobrać oprawki – poradnik A",
+		title: "Jak dobrać okładki – poradnik A",
 		head:  description("Poradnik doboru oprawek, wersja A.") + canonical("/duplicate-content-a"),
 		main:  sharedArticle,
 	})
 	p["/duplicate-content-b"] = html(doc{
-		title: "Jak dobrać oprawki – poradnik B",
+		title: "Jak dobrać okładki – poradnik B",
 		head:  description("Poradnik doboru oprawek, wersja B.") + canonical("/duplicate-content-b"),
 		main:  sharedArticle,
 	})
 	p["/near-duplicate"] = html(doc{
-		title: "Jak dobrać oprawki – poradnik C",
+		title: "Jak dobrać okładki – poradnik C",
 		head:  description("Poradnik doboru oprawek, wersja C.") + canonical("/near-duplicate"),
 		main:  strings.Replace(sharedArticle, "Warto pamiętać, że szerokość", "Pamiętaj również, że szerokość", 1),
 	})
 
 	p["/keyword-page"] = html(doc{
-		title: "Badanie wzroku i okulary korekcyjne – optometrysta w Warszawie",
-		head: description("Badanie wzroku u optometrysty, okulary korekcyjne, okulary progresywne i oprawki.") + canonical("/keyword-page") + `
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Badanie wzroku u optometrysty","author":{"@type":"Person","name":"Anna Nowak"}}</script>`,
-		main: `<h1>Badanie wzroku u optometrysty</h1>
-<p>Badanie wzroku to pierwszy krok do dobrze dobranych okularów. Optometrysta sprawdza ostrość widzenia, widzenie obuoczne i ciśnienie w oku. Regularne badanie wzroku pozwala wcześnie wykryć wady refrakcji.</p>
-<h2>Okulary korekcyjne</h2>
-<p>Na podstawie wyniku badania wzroku optometrysta dobiera okulary korekcyjne. Okulary korekcyjne mogą mieć soczewki jednoogniskowe lub okulary progresywne dla osób z presbiopią.</p>
-<h2>Okulary progresywne</h2>
-<p>Okulary progresywne łączą korekcję do dali i do bliży. Dobre okulary progresywne wymagają precyzyjnego pomiaru, dlatego optometrysta mierzy rozstaw źrenic i wysokość montażu.</p>
+		title: "Analiza archiwum i archiwum korekcyjne – archiwista w regionie",
+		head: description("Analiza archiwum u archiwisty, archiwum korekcyjne, archiwum progresywne i okładki.") + canonical("/keyword-page") + `
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Analiza archiwum u archiwisty","author":{"@type":"Person","name":"Autor testowy"}}</script>`,
+		main: `<h1>Analiza archiwum u archiwisty</h1>
+<p>Analiza archiwum to pierwszy krok do dobrze dobranych okularów. Archiwista sprawdza ostrość odczytu, widzenie obuoczne i ciśnienie w oku. Regularne analiza archiwum pozwala wcześnie wykryć wady refrakcji.</p>
+<h2>Archiwum korekcyjne</h2>
+<p>Na podstawie wyniku analizy archiwum archiwista dobiera archiwum korekcyjne. Archiwum korekcyjne mogą mieć zakładki jednoogniskowe lub archiwum progresywne dla osób z presbiopią.</p>
+<h2>Archiwum progresywne</h2>
+<p>Archiwum progresywne łączą korekcję do dali i do bliży. Dobre archiwum progresywne wymagają precyzyjnego pomiaru, dlatego archiwista mierzy rozstaw źrenic i wysokość montażu.</p>
 <h2>Oprawki</h2>
-<p>Oprawki dobieramy do kształtu twarzy i rodzaju soczewek. Lekkie oprawki tytanowe sprawdzają się przy okularach progresywnych. W salonie znajdziesz ponad tysiąc modeli oprawek.</p>
-<p>Umów badanie wzroku u optometrysty i wybierz oprawki razem z nami.</p>`,
+<p>Oprawki dobieramy do kształtu twarzy i rodzaju soczewek. Lekkie okładki tytanowe sprawdzają się przy okularach progresywnych. W salonie znajdziesz ponad tysiąc modeli oprawek.</p>
+		<p>Umów analizę archiwum i wybierz okładki razem z nami.</p>`,
 	})
 
 	p["/headings"] = html(doc{
@@ -461,7 +461,7 @@ func Pages() map[string]Page {
 	p["/private/secret"] = html(doc{title: "Prywatne", main: `<h1>Prywatne</h1>`})
 
 	p["/docs/cennik.pdf"] = Page{Header: map[string]string{"Content-Type": "application/pdf"}, Body: "%PDF-1.4 test"}
-	for _, img := range []string{"/img/salon.jpg", "/img/oprawki.jpg", "/img/og.jpg", "/img/logo.png", "/img/a.jpg", "/img/decor.png", "/img/b.jpg", "/img/x.png"} {
+	for _, img := range []string{"/img/salon.jpg", "/img/okładki.jpg", "/img/og.jpg", "/img/logo.png", "/img/a.jpg", "/img/decor.png", "/img/b.jpg", "/img/x.png"} {
 		p[img] = Page{Header: map[string]string{"Content-Type": "image/jpeg"}, Body: "img"}
 	}
 
@@ -507,7 +507,7 @@ func calendar(r *http.Request) Page {
 	}
 	return html(doc{
 		title: fmt.Sprintf("Kalendarz wizyt %04d-%02d", y, m),
-		head:  description("Kalendarz wolnych terminów badania wzroku."),
+		head:  description("Kalendarz wolnych terminów analizy archiwum."),
 		main:  fmt.Sprintf(`<h1>Terminy %04d-%02d</h1><p><a href="/calendar?month=%04d-%02d">Następny miesiąc</a></p>`, y, m, ny, nm),
 	})
 }

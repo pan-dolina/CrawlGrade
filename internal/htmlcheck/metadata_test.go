@@ -31,8 +31,8 @@ func ids(fs []findings.Finding) string {
 }
 
 func TestTitleAndDescription(t *testing.T) {
-	good := `<title>  Salon   optyczny
-	w Warszawie </title><meta name="Description" content=" Badanie wzroku, okulary korekcyjne i oprawki w centrum Warszawy. ">`
+	good := `<title>  Salon   archiwalny
+	w regionie </title><meta name="Description" content=" Analiza archiwum, archiwum korekcyjne i okładki w centrum regionu. ">`
 	cases := []struct {
 		name, body, want string
 	}{
@@ -40,12 +40,12 @@ func TestTitleAndDescription(t *testing.T) {
 		{"missing both", `<p>hi</p>`, "SEO-TITLE-001,SEO-DESC-001"},
 		{"empty", `<title> </title><meta name="description" content="">`, "SEO-TITLE-002,SEO-DESC-002"},
 		{"short and long", `<title>Home</title><meta name="description" content="` + strings.Repeat("opis ", 40) + `">`, "SEO-TITLE-005,SEO-DESC-005"},
-		{"long title", `<title>` + strings.Repeat("Okulary ", 10) + `</title><meta name="description" content="Badanie wzroku, okulary korekcyjne i oprawki w centrum Warszawy.">`, "SEO-TITLE-006"},
+		{"long title", `<title>` + strings.Repeat("Archiwum ", 10) + `</title><meta name="description" content="Analiza archiwum, archiwum korekcyjne i okładki w centrum regionu.">`, "SEO-TITLE-006"},
 		{"multiple", good + `<title>Second title here!</title><meta name="description" content="Druga wersja opisu strony, dodana przez inny szablon.">`, "SEO-TITLE-003,SEO-DESC-003"},
 		{"svg title ignored", good + `<body><svg><title>icon</title></svg></body>`, ""},
-		{"title in body still counts", `<meta name="description" content="Badanie wzroku, okulary korekcyjne i oprawki w centrum Warszawy."><body><title>Late title in body</title></body>`, ""},
+		{"title in body still counts", `<meta name="description" content="Analiza archiwum, archiwum korekcyjne i okładki w centrum regionu."><body><title>Late title in body</title></body>`, ""},
 		{"template ignored", good + `<body><template><title>x</title><meta name="description" content="y"></template></body>`, ""},
-		{"og description is not meta description", `<title>Salon optyczny w Warszawie</title><meta property="description" content="x">`, "SEO-DESC-001"},
+		{"og description is not meta description", `<title>Salon archiwalny w regionie</title><meta property="description" content="x">`, "SEO-DESC-001"},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
@@ -56,7 +56,7 @@ func TestTitleAndDescription(t *testing.T) {
 		})
 	}
 	p := parse(t, "https://example.com/", good)
-	if p.Title() != "Salon optyczny w Warszawie" {
+	if p.Title() != "Salon archiwalny w regionie" {
 		t.Errorf("title = %q", p.Title())
 	}
 }

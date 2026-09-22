@@ -229,25 +229,25 @@ func mostSevereSeverity(fs []findings.Finding) string {
 // an individual finding on a page.
 func singleFindingInstruction(id, title, severity, category, url string, evidence []string, rec string) string {
 	var b strings.Builder
-	b.WriteString("Działaj jako ekspert web developmentu i SEO. Napraw problem wykryty na stronie:\n\n")
-	fmt.Fprintf(&b, "- Identyfikator reguły: %s\n", id)
-	fmt.Fprintf(&b, "- Poziom istotności: %s\n", strings.ToUpper(severity))
-	fmt.Fprintf(&b, "- Nazwa błędu: %s\n", title)
+	b.WriteString("Act as a senior web developer and technical SEO specialist. Fix the following issue found on the website:\n\n")
+	fmt.Fprintf(&b, "- Rule ID: %s\n", id)
+	fmt.Fprintf(&b, "- Severity: %s\n", strings.ToUpper(severity))
+	fmt.Fprintf(&b, "- Issue: %s\n", title)
 	if category != "" {
-		fmt.Fprintf(&b, "- Kategoria: %s\n", category)
+		fmt.Fprintf(&b, "- Category: %s\n", category)
 	}
 	if url != "" {
-		fmt.Fprintf(&b, "- Adres URL: %s\n", url)
+		fmt.Fprintf(&b, "- URL: %s\n", url)
 	}
 	for _, ev := range evidence {
-		fmt.Fprintf(&b, "- Obserwacja audytu: %s\n", ev)
+		fmt.Fprintf(&b, "- Evidence: %s\n", ev)
 	}
 	if rec != "" {
-		fmt.Fprintf(&b, "- Zalecana akcja naprawcza: %s\n", rec)
+		fmt.Fprintf(&b, "- Recommendation: %s\n", rec)
 	}
-	b.WriteString("\nZadanie dla Ciebie:\n")
-	b.WriteString("1. Przedstaw gotowy, poprawny kod źródłowy (HTML, nagłówki HTTP, Schema.org lub reguły serwera), który rozwiązuje powyższy błąd.\n")
-	b.WriteString("2. Wyjaśnij zwięźle, jak bezpiecznie wdrożyć tę zmianę i jak przetestować jej poprawność.")
+	b.WriteString("\nTask:\n")
+	b.WriteString("1. Provide the exact, production-ready code (HTML, HTTP headers, Schema.org JSON-LD, or server configuration) to fix this issue.\n")
+	b.WriteString("2. Briefly explain how to safely deploy and verify the fix.")
 	return b.String()
 }
 
@@ -301,35 +301,35 @@ func buildLLMPrompt(rep *Report, startURL string, quickOnly bool) string {
 	}
 
 	var b strings.Builder
-	b.WriteString("Działaj jako senior web developer i ekspert technicznego SEO.\n")
+	b.WriteString("Act as a senior web developer and technical SEO specialist.\n")
 	if startURL != "" {
-		fmt.Fprintf(&b, "Oto zestawienie problemów wykrytych przez audyt CrawlGrade dla witryny %s.\n\n", startURL)
+		fmt.Fprintf(&b, "Analyze the issues identified by the CrawlGrade audit for %s and prepare concrete code fixes:\n\n", startURL)
 	} else {
-		b.WriteString("Oto zestawienie problemów wykrytych przez audyt CrawlGrade.\n\n")
+		b.WriteString("Analyze the issues identified by the CrawlGrade audit and prepare concrete code fixes:\n\n")
 	}
-	b.WriteString("LISTA WYKRYTYCH BŁĘDÓW DO NAPRAWY:\n\n")
+	b.WriteString("DETECTED ISSUES TO FIX:\n\n")
 
 	for i, it := range items {
 		fmt.Fprintf(&b, "%d. [%s] [%s] %s", i+1, strings.ToUpper(it.Severity), it.ID, it.Title)
 		if it.Category != "" {
-			fmt.Fprintf(&b, " (Kategoria: %s)", it.Category)
+			fmt.Fprintf(&b, " (Category: %s)", it.Category)
 		}
 		b.WriteByte('\n')
 		if it.URL != "" {
 			fmt.Fprintf(&b, "   URL: %s\n", it.URL)
 		}
 		for _, ev := range it.Evidence {
-			fmt.Fprintf(&b, "   Obserwacja: %s\n", ev)
+			fmt.Fprintf(&b, "   Evidence: %s\n", ev)
 		}
 		if it.Rec != "" {
-			fmt.Fprintf(&b, "   Zalecenie: %s\n", it.Rec)
+			fmt.Fprintf(&b, "   Recommendation: %s\n", it.Rec)
 		}
 		b.WriteByte('\n')
 	}
 
-	b.WriteString("ZADANIE DLA MODELU LLM:\n")
-	b.WriteString("1. Przygotuj kompletne, gotowe do skopiowania i wdrożenia fragmenty kodu (np. HTML w sekcji <head>, nagłówki odpowiedzi HTTP, plik robots.txt, sitemap.xml lub dane strukturalne JSON-LD Schema.org).\n")
-	b.WriteString("2. Dla każdego błędu opisz krótko przyczynę powstania i instrukcję weryfikacji po wdrożeniu.\n")
-	b.WriteString("3. Rozwiązania muszą spełniać standardy W3C oraz wytyczne Google Search Essentials / Search Central.")
+	b.WriteString("INSTRUCTIONS FOR RESPONSE:\n")
+	b.WriteString("1. Provide complete, production-ready code snippets (e.g. HTML <head> tags, HTTP response headers, robots.txt, sitemap.xml, or Schema.org JSON-LD).\n")
+	b.WriteString("2. For each issue, briefly explain the root cause and verification steps.\n")
+	b.WriteString("3. Ensure all solutions adhere to W3C standards and Google Search Essentials guidelines.")
 	return b.String()
 }

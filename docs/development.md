@@ -402,5 +402,8 @@ was retained; missing return links use the new SEO-HREFLANG-007 instead.
   dark backgrounds. Collapsible (`<details>`) LLM instruction prompts were added
   both as a comprehensive site-wide action prompt and per-finding instructions,
   enabling direct copy-paste into AI coding assistants for bug remediation.
+- All HTML report section headings, table columns and LLM remediation prompts
+  were standardized in English to maintain consistency with the rest of the CLI.
+
 
 

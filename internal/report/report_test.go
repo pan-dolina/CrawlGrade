@@ -144,7 +144,7 @@ func TestRenderHTMLQuickWins(t *testing.T) {
 	if !strings.Contains(b.String(), "Quick wins") || !strings.Contains(b.String(), "Fix this") || strings.Contains(b.String(), "No findings.") {
 		t.Fatal(b.String())
 	}
-	if !strings.Contains(b.String(), "Instrukcje dla LLM") || !strings.Contains(b.String(), "Instrukcja dla LLM") {
+	if !strings.Contains(b.String(), "LLM remediation prompt") || !strings.Contains(b.String(), "LLM instructions") {
 		t.Errorf("quick-wins HTML missing LLM instructions:\n%s", b.String())
 	}
 	if !strings.Contains(b.String(), "sev-border-high") {
@@ -200,9 +200,9 @@ func TestRenderHTMLPrioritizesTermsAndCollapsesDetails(t *testing.T) {
 		t.Fatalf("Render(html): %v", err)
 	}
 	out := buf.String()
-	termsAt := strings.Index(out, "Najsilniejsze hasła")
+	termsAt := strings.Index(out, "Site terms")
 	quickWinsAt := strings.Index(out, "Quick wins")
-	detailsAt := strings.Index(out, "Findingi według priorytetu")
+	detailsAt := strings.Index(out, "Findings by priority")
 	if termsAt < 0 || quickWinsAt < 0 || detailsAt < 0 {
 		t.Fatalf("HTML missing prioritized sections:\n%s", out)
 	}
@@ -220,11 +220,11 @@ func TestRenderHTMLPrioritizesTermsAndCollapsesDetails(t *testing.T) {
 		"id=\"terms\"",
 		"id=\"quick-wins\"",
 		"id=\"llm-instructions\"",
-		"Instrukcja dla LLM",
-		"Działaj jako senior web developer",
+		"LLM instructions",
+		"Act as a senior web developer",
 		"href=\"#top\"",
 		"class=\"to-top\"",
-		"Do góry",
+		"Back to top",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("HTML missing navigation element %q", want)

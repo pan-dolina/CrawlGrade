@@ -24,9 +24,9 @@ This document defines what the crawler may fetch and which limits apply.
 
 ## Privacy
 
-- CrawlGrade sends no telemetry and contacts no host other than the target
-  site (and, with `--check-external-links`, the external URLs that the site
-  itself links to).
+- CrawlGrade sends no telemetry and contacts the target site, declared sitemap hosts and redirect destinations.
+  With `--check-external-links`, it also checks external linked URLs. All
+  destinations go through the network policy.
 - Requests carry no cookies; cookies set by the site are discarded.
 - Environment proxy settings (`HTTP_PROXY`, `HTTPS_PROXY`) are ignored,
   because a proxy would resolve names and connect on the crawler's behalf and
@@ -38,13 +38,13 @@ This document defines what the crawler may fetch and which limits apply.
 A URL is **in scope** when:
 
 - its scheme is `http` or `https`, and
-- its host equals the start URL's host, ignoring a leading `www.` on either
+- its host and non-default port equal the start URL's host and port, ignoring a leading `www.` on either
   side (`example.com` and `www.example.com` are the same site), and
 - it passes robots.txt for that host.
 
 Everything else is **external**. External URLs are recorded as link targets
 but never crawled. With `--check-external-links` their status is checked with
-a bounded number of HEAD (falling back to GET) requests, subject to the same
+at most 100 distinct HEAD requests, subject to the same
 network policy.
 
 ## Network policy (SSRF protection)
@@ -125,7 +125,9 @@ partial report.
 
 ## Robots
 
-robots.txt is fetched for each in-scope host before any page on it, following
+robots.txt is fetched for each admitted in-scope origin before requesting a
+page on it. Redirect hops remain governed by the guarded fetcher; they do not
+trigger separate robots discovery. Robots matching follows
 RFC 9309:
 
 - `4xx` (including 404): no restrictions. A missing robots.txt is not an

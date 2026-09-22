@@ -8,6 +8,7 @@
 package report
 
 import (
+	"github.com/pan-dolina/crawlgrade/internal/terms"
 	"time"
 
 	"github.com/pan-dolina/crawlgrade/internal/crawler"
@@ -45,6 +46,10 @@ type Summary struct {
 // Report is one complete audit: a summary plus the findings that came from
 // each analysis, grouped by source.
 type Report struct {
+	Baseline *Diff         `json:"baseline_diff,omitempty"`
+	Pages    []PageMetric  `json:"pages,omitempty"`
+	Terms    []terms.Score `json:"terms,omitempty"`
+	Scores   *Scores       `json:"scores,omitempty"`
 	// Version is the schema version (see SchemaVersion).
 	Version string `json:"schema_version"`
 	// Summary is the headline information about the crawl.
@@ -77,6 +82,7 @@ const (
 func New(start string, crawl *crawler.Result, groups map[string][]findings.Finding) *Report {
 	all := make([]findings.Finding, 0, len(groups)*10)
 	for _, fs := range groups {
+		findings.Sort(fs)
 		all = append(all, fs...)
 	}
 	findings.Sort(all)

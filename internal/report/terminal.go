@@ -24,11 +24,34 @@ var severitySymbol = map[findings.Severity]string{
 // notes. It never emits ANSI colour codes itself; the caller may strip or add
 // them.
 func RenderTerminal(w io.Writer, rep *Report) error {
+	w = terminalWriter{w}
 	if err := renderSummary(w, rep); err != nil {
 		return err
 	}
+	if rep.Scores != nil {
+		if _, err := fmt.Fprintf(w, "Technical SEO: %d/100; passive web hygiene: %d/100 (not rankings)\n", rep.Scores.SEO, rep.Scores.WebHygiene); err != nil {
+			return err
+		}
+	}
+	for _, term := range rep.Terms {
+		if _, err := fmt.Fprintf(w, "Term: %s %.1f\n", term.Term, term.Strength); err != nil {
+			return err
+		}
+	}
+	for _, p := range rep.Pages {
+		if _, err := fmt.Fprintf(w, "Page: %s status=%d inbound=%d outbound=%d\n", p.URL, p.Status, p.Inbound, p.Outbound); err != nil {
+			return err
+		}
+	}
 	if err := renderFindings(w, rep); err != nil {
 		return err
+	}
+	if rep.Baseline != nil {
+		var b strings.Builder
+		rep.Baseline.RenderTerminal(&b)
+		if _, err := io.WriteString(w, b.String()); err != nil {
+			return err
+		}
 	}
 	return renderNotes(w, rep)
 }
@@ -78,7 +101,7 @@ func writeFinding(b *strings.Builder, f findings.Finding) {
 	if !ok {
 		sym = "? "
 	}
-	fmt.Fprintf(b, "  %s [%s] %s\n", sym, f.Severity, f.Title)
+	fmt.Fprintf(b, "  %s [%s] %s %s\n", sym, f.Severity, f.ID, f.Title)
 	if f.URL != "" {
 		fmt.Fprintf(b, "      URL: %s\n", f.URL)
 	}

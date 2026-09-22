@@ -347,3 +347,48 @@ Further problems found while fixing the items above:
 - **The start URL bypassed robots.txt.** The crawler checked `Allowed` only
   for discovered links, never for the start URL itself. It now checks the
   start URL first and stops with `start-disallowed` without fetching it.
+
+
+## Completion work (2026-09-22)
+
+The open milestone review was used as the implementation checklist. Existing
+uncommitted hreflang work was completed. The original SEO-HREFLANG-001 meaning
+was retained; missing return links use the new SEO-HREFLANG-007 instead.
+
+- Analyses now run inside the crawler callback while the decoded HTML tree
+  exists. Content and structured-data findings survive body disposal. HTTP
+  Link/X-Robots-Tag headers are applied before indexability checks, and
+  relative references use the final URL. Duplicate analysis is connected.
+- Sitemap directives feed discovery; sitemap-only URLs enter the bounded
+  frontier after the start page. Origin-specific robots policies are cached
+  for admitted origins. Redirect hops still use fetcher policy, without
+  independent robots discovery. The whole audit, including discovery and
+  optional external checks, now shares a maximum-duration context.
+- Explicit depth zero stays zero. CLI values are validated before networking;
+  blocked and failed starts produce documented exit codes. Flags cover output,
+  JSON, keywords, timeout, user agent, rate, external HEAD checks and private
+  networks. HTTP preview checks are bounded by the same fetcher and limiter.
+- Unvisited links are no longer called broken. Self-links do not count as
+  inbound links; the start URL is exempt from orphan findings. `noopener`
+  and `noreferrer` no longer incorrectly suppress graph edges as nofollow.
+- Main/article preference, hidden-node exclusion, corrected Polish stopwords,
+  Unicode normalization and weighted TF-IDF scores are implemented. The
+  formula, normalization and limitations are in `docs/analysis.md`.
+- `golang.org/x/text` is now a direct dependency for language/region validation
+  and NFC normalization. No new module was added.
+- Exact duplicate grouping uses SHA-256. Near duplicates are grouped around
+  representatives; this replaces repeated allocation of every matching pair.
+- JSON-LD collection stops at the block count and byte limits before copying
+  more scripts. Nested array traversal now obeys the depth guard too.
+- Reports sort all finding groups, expose IDs, page/link metrics and terms,
+  separate hygiene from SEO scoring, strip terminal controls, and apply a
+  script-free CSP to standalone HTML. Baseline reports validate schema 1;
+  offline diff includes aggregate deltas and full reports retain the delta.
+- Tests caught the changed depth-zero semantics and confirmed actual content
+  extraction after body disposal. Compiled CLI tests compare deterministic
+  output and a normalized local-site golden; no test requires public Internet.
+- Local `gofmt -l .` and `gosec ./...` also inspect ignored `.tools` and
+  `.gopath` fixtures in this checkout. Project formatting is checked with
+  `gofmt -l cmd internal test`; gosec excludes only those two cache directories.
+  The local testsite intentionally serves hostile HTML; its G705 suppression
+  documents that purpose. Baseline file reading is explicitly user-directed.

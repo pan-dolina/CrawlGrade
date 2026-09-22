@@ -4,6 +4,7 @@ import (
 	"net/url"
 	"path"
 	"slices"
+	"strconv"
 	"strings"
 
 	"golang.org/x/net/html"
@@ -34,6 +35,10 @@ type Link struct {
 // Image is one <img> found on a page.
 type Image struct {
 	Src      string // resolved absolute URL; empty when unresolved or invalid
+	HasAlt   bool
+	Width    int
+	Height   int
+	Loading  string
 	Alt      string // collapsed alt text
 	External bool   // points outside the page's own host
 	Resource bool   // names a non-HTML resource (by extension)
@@ -77,7 +82,10 @@ func (p *Page) addImage(n *html.Node) {
 	if src == "" {
 		return
 	}
-	img := Image{Alt: clip(collapse(attr(n, "alt")))}
+	img := Image{Alt: clip(collapse(attr(n, "alt"))), Loading: strings.ToLower(attr(n, "loading"))}
+	_, img.HasAlt = attrOK(n, "alt")
+	img.Width, _ = strconv.Atoi(attr(n, "width"))
+	img.Height, _ = strconv.Atoi(attr(n, "height"))
 	if u, err := p.Resolve(src); err == nil && u.Fragment == "" && u.RawFragment == "" {
 		img.Src = u.String()
 		img.External = !p.scope.Contains(u)
@@ -112,7 +120,7 @@ func (p *Page) addLink(n *html.Node) {
 // isLinkRelToken reports whether tok is a rel token that matters for linking.
 func isLinkRelToken(tok string) bool {
 	switch strings.ToLower(tok) {
-	case "nofollow", "sponsored", "ugc", "noopener", "noreferrer":
+	case "nofollow", "sponsored", "ugc":
 		return true
 	}
 	return false

@@ -27,6 +27,9 @@ type Page struct {
 	// Indexable reports whether the page may be indexed. Orphan checks skip
 	// pages that are noindexed.
 	Indexable bool
+	Status    int
+	Failed    bool
+	Start     bool
 }
 
 // Link is one link the page contained.
@@ -37,7 +40,8 @@ type Link struct {
 	// AnchorText is the visible text of the link, lower-cased and trimmed.
 	AnchorText string
 	// Empty reports whether the anchor carried no usable text.
-	Empty bool
+	Empty    bool
+	NoFollow bool
 }
 
 // Result holds the link-graph findings of a crawl.
@@ -59,9 +63,11 @@ func Analyze(pages []*Page) *Result {
 	r := &Result{}
 
 	fetched := map[string]bool{}
+	failed := map[string]bool{}
 	for _, p := range pages {
 		if p.URL != "" {
 			fetched[p.URL] = true
+			failed[p.URL] = p.Failed || p.Status >= 400
 		}
 	}
 
@@ -87,7 +93,12 @@ func Analyze(pages []*Page) *Result {
 				continue
 			}
 			if fetched[l.URL] {
-				inbound[l.URL]++
+				if l.URL != p.URL && !l.NoFollow && p.Indexable {
+					inbound[l.URL]++
+				}
+				if failed[l.URL] {
+					broken[l.URL] = true
+				}
 				if p.Indexable && strings.TrimSpace(l.AnchorText) != "" {
 					anchorTargets[strings.ToLower(l.AnchorText)] = addTarget(anchorTargets[strings.ToLower(l.AnchorText)], l.URL)
 				}
@@ -96,13 +107,13 @@ func Analyze(pages []*Page) *Result {
 			if l.Resource {
 				continue
 			}
-			broken[l.URL] = true
+			// Unvisited targets are unknown, not broken.
 		}
 	}
 
 	// Orphans: indexable pages not linked to by anyone.
 	for _, p := range pages {
-		if p.URL != "" && p.Indexable && inbound[p.URL] == 0 {
+		if p.URL != "" && p.Indexable && !p.Start && inbound[p.URL] == 0 {
 			r.append(findings.LinkOrphan.New(p.URL))
 		}
 	}

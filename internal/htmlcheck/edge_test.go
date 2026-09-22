@@ -13,7 +13,7 @@ func TestTitleEdgeCases(t *testing.T) {
 		`<title>Okulary &amp; oprawki &ndash; salon</title>`:         "Okulary & oprawki – salon",
 		`<title>Tytuł z <b>tagiem</b> w środku</title>`:              "Tytuł z <b>tagiem</b> w środku",
 		"<title>\n\t Nowa\nlinia \r\n</title>":                       "Nowa linia",
-		`<title>&nbsp;&#8203;</title>`:                               "​",
+		`<title>&nbsp;&#8203;</title>`:                               "\xe2\x80\x8b",
 		`<title>&lt;script&gt;alert(1)&lt;/script&gt;</title>`:       "<script>alert(1)</script>",
 		`<head><title>First</title></head><body><title>Body</title>`: "First",
 	}

@@ -13,6 +13,7 @@
 package duplicates
 
 import (
+	"crypto/sha256"
 	"hash/fnv"
 	"strings"
 
@@ -61,69 +62,45 @@ type DuplicateGroup struct {
 // Analyze compares every pair of pages and returns the duplicate groups.
 func Analyze(pages []*Page) *Result {
 	r := &Result{}
-	fingerprints := make([]int64, len(pages))
-	for i, p := range pages {
-		fingerprints[i] = simHash(p.Tokens)
-	}
-	for i := 0; i < len(pages); i++ {
-		for j := i + 1; j < len(pages); j++ {
-			if pages[j] == nil || pages[i] == nil {
-				continue
-			}
-			switch {
-			case pages[i].Text == pages[j].Text && pages[i].Text != "":
-				r.addExact(pages[i].URL, pages[j].URL)
-			case hamming(fingerprints[i], fingerprints[j]) <= NearDuplicateThreshold:
-				r.addNear(pages[i].URL, pages[j].URL)
+	exact := map[[32]byte]int{}
+	var hashes []int64
+	for _, p := range pages {
+		if p == nil || p.Text == "" || len(p.Tokens) == 0 {
+			continue
+		}
+		digest := sha256.Sum256([]byte(p.Text))
+		if i, ok := exact[digest]; ok {
+			r.Exact[i].Duplicates = append(r.Exact[i].Duplicates, p.URL)
+			continue
+		}
+		exact[digest] = len(r.Exact)
+		r.Exact = append(r.Exact, DuplicateGroup{Representative: p.URL})
+		hash := simHash(p.Tokens)
+		matched := false
+		for i, h := range hashes {
+			if hamming(hash, h) <= NearDuplicateThreshold {
+				r.Near[i].Duplicates = append(r.Near[i].Duplicates, p.URL)
+				matched = true
+				break
 			}
 		}
+		if !matched {
+			hashes = append(hashes, hash)
+			r.Near = append(r.Near, DuplicateGroup{Representative: p.URL})
+		}
 	}
+	filter := func(groups []DuplicateGroup) []DuplicateGroup {
+		var out []DuplicateGroup
+		for _, g := range groups {
+			if len(g.Duplicates) > 0 {
+				out = append(out, g)
+			}
+		}
+		return out
+	}
+	r.Exact = filter(r.Exact)
+	r.Near = filter(r.Near)
 	return r
-}
-
-// addExact records that a duplicates b.
-func (r *Result) addExact(a, b string) {
-	found := false
-	for _, g := range r.Exact {
-		if g.Representative == a {
-			g.Duplicates = append(g.Duplicates, b)
-			r.Exact = replaceGroup(r.Exact, g)
-			found = true
-			break
-		}
-	}
-	if !found {
-		r.Exact = append(r.Exact, DuplicateGroup{Representative: a, Duplicates: []string{b}})
-	}
-}
-
-// addNear records that a is near-duplicate with b.
-func (r *Result) addNear(a, b string) {
-	found := false
-	for _, g := range r.Near {
-		if g.Representative == a {
-			g.Duplicates = append(g.Duplicates, b)
-			r.Near = replaceGroup(r.Near, g)
-			found = true
-			break
-		}
-	}
-	if !found {
-		r.Near = append(r.Near, DuplicateGroup{Representative: a, Duplicates: []string{b}})
-	}
-}
-
-// replaceGroup returns groups with the group matching g replaced.
-func replaceGroup(groups []DuplicateGroup, g DuplicateGroup) []DuplicateGroup {
-	out := make([]DuplicateGroup, 0, len(groups))
-	for _, x := range groups {
-		if x.Representative == g.Representative {
-			out = append(out, g)
-		} else {
-			out = append(out, x)
-		}
-	}
-	return out
 }
 
 // simHash computes a SimHash over the tokens. Each token contributes a

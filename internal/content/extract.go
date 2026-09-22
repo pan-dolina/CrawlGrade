@@ -48,51 +48,67 @@ type Result struct {
 // for pageURL; the scope is unused here but kept for signature symmetry with
 // the rest of the pipeline.
 func Extract(pageURL, body string) *Result {
-	r := &Result{URL: pageURL}
 	root, err := html.Parse(bytes.NewReader([]byte(body)))
 	if err != nil {
-		return r
+		return &Result{URL: pageURL, NoText: true}
+	}
+	return ExtractTree(pageURL, root)
+}
+
+// ExtractTree uses the already decoded HTML tree. Explicit main/article regions
+// take precedence; navigation and hidden elements are excluded.
+func ExtractTree(pageURL string, root *html.Node) *Result {
+	r := &Result{URL: pageURL}
+	var main *html.Node
+	walk(root, func(n *html.Node) bool { return n.Type == html.ElementNode && chrome[n.Data] }, func(n *html.Node) {
+		if main == nil && n.Type == html.ElementNode && (n.Data == "main" || n.Data == "article") {
+			main = n
+		}
+	})
+	target := root
+	if main != nil {
+		target = main
 	}
 	var b strings.Builder
 	elements := 0
-	walk(root, func(n *html.Node) bool {
-		if elements >= MaxElements {
+	walk(target, func(n *html.Node) bool {
+		elements++
+		if elements > MaxElements || b.Len() >= MaxContentRunes {
 			return true
 		}
-		elements++
 		if n.Type == html.ElementNode {
-			data := n.Data
-			if chrome[data] {
-				// Skip the subtree: it is shared chrome.
+			if chrome[n.Data] {
 				return true
+			}
+			for _, a := range n.Attr {
+				if a.Key == "hidden" || (a.Key == "aria-hidden" && a.Val == "true") {
+					return true
+				}
 			}
 		}
 		return false
 	}, func(n *html.Node) {
-		if n.Type != html.TextNode || b.Len() >= MaxContentRunes {
-			return
-		}
-		text := n.Data
-		if strings.TrimSpace(text) == "" {
-			return
-		}
-		if len(r.Text) < MaxContentRunes {
-			r.Text += " " + text
+		if n.Type == html.TextNode && elements <= MaxElements && b.Len() < MaxContentRunes {
+			text := n.Data
+			if len(text) > MaxContentRunes-b.Len() {
+				text = text[:MaxContentRunes-b.Len()]
+			}
+			b.WriteString(text)
+			if b.Len() < MaxContentRunes {
+				b.WriteByte(' ')
+			}
 		}
 	})
-	r.Text = collapseSpaces(r.Text)
-	if len(r.Text) > MaxContentRunes {
-		r.Text = r.Text[:MaxContentRunes]
-	}
-	// Count meaningful tokens; a page with none is reported separately.
+	r.Text = strings.ToValidUTF8(collapseSpaces(b.String()), "")
 	r.Tokens = len(terms.Tokenize(r.Text))
 	r.NoText = r.Tokens == 0
-	// Boilerplate is flagged when the extracted text is a small fraction of
-	// the raw text: most of the page is shared chrome.
-	if rawLen := len(collapseSpaces(body)); rawLen > 0 {
-		ratio := float64(len(r.Text)) / float64(rawLen)
-		r.Boilerplate = ratio < BoilerplateRatio
-	}
+	var total int
+	walk(root, nil, func(n *html.Node) {
+		if n.Type == html.TextNode {
+			total += len(n.Data)
+		}
+	})
+	r.Boilerplate = total == 0 || float64(len(r.Text))/float64(total) < BoilerplateRatio
 	return r
 }
 

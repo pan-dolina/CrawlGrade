@@ -73,7 +73,7 @@ func TestAuditCrawlsAndGroupsFindings(t *testing.T) {
 	srv := site.server(t)
 	start := testURL(t, srv, "/")
 
-	res := Run(context.Background(), client(), start, Options{})
+	res := Run(context.Background(), client(), start, Options{MaxDepth: 3})
 	rep := res.Report
 	if rep == nil {
 		t.Fatal("audit returned a nil report")
@@ -99,7 +99,7 @@ func TestAuditEmptySite(t *testing.T) {
 	srv := site.server(t)
 	start := testURL(t, srv, "/")
 
-	res := Run(context.Background(), client(), start, Options{})
+	res := Run(context.Background(), client(), start, Options{MaxDepth: 3})
 	rep := res.Report
 	if rep == nil {
 		t.Fatal("audit returned a nil report")
@@ -120,7 +120,7 @@ func TestAuditReportRenders(t *testing.T) {
 	srv := site.server(t)
 	start := testURL(t, srv, "/")
 
-	res := Run(context.Background(), client(), start, Options{})
+	res := Run(context.Background(), client(), start, Options{MaxDepth: 3})
 	rep := res.Report
 
 	// Every format must render without error.

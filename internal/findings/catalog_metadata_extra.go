@@ -1,33 +1,5 @@
 package findings
 
-// Metadata: hreflang (regional targeting).
-var (
-	HreflangMissing = register(Rule{
-		ID: "SEO-HREFLANG-001", Category: CategoryMetadata, Severity: SeverityLow,
-		Title:          "Page has no hreflang alternates",
-		Description:    "A page with regional or language versions should declare them with rel=alternate hreflang links (and an x-default when the site serves several languages). Without them, search engines guess the intended audience.",
-		Recommendation: "Add a rel=alternate hreflang link for every language/region version, including an x-default that points to the fallback page.",
-	})
-	HreflangConflict = register(Rule{
-		ID: "SEO-HREFLANG-002", Category: CategoryMetadata, Severity: SeverityMedium,
-		Title:          "hreflang alternates are inconsistent",
-		Description:    "Every hreflang link should list all the other versions, including a self-reference and an x-default, and each version should point back to the others. A version that is missing from the list, or a self-reference that is absent, makes the network unreliable.",
-		Recommendation: "Give every language version the same complete set of hreflang links, each pointing back to all the others.",
-	})
-	HreflangInvalid = register(Rule{
-		ID: "SEO-HREFLANG-003", Category: CategoryMetadata, Severity: SeverityLow,
-		Title:          "hreflang value is not a valid language or region",
-		Description:    "hreflang values must be ISO 639-1 language codes, optionally followed by a hyphen and an ISO 3166-1 region code (for example pl, pl-PL, en-US). Unknown values are ignored by search engines.",
-		Recommendation: "Use valid language and region codes, for example pl, pl-PL or en-UK.",
-	})
-	HreflangSelfMissing = register(Rule{
-		ID: "SEO-HREFLANG-004", Category: CategoryMetadata, Severity: SeverityLow,
-		Title:          "hreflang set has no self-reference",
-		Description:    "A page that declares hreflang alternates should also link to itself. Search engines use the self-reference to confirm the page is one of the alternates.",
-		Recommendation: "Add a rel=alternate hreflang link that points back to this page.",
-	})
-)
-
 // Metadata: social preview metadata (Open Graph and Twitter Card).
 var (
 	SocialMissing = register(Rule{

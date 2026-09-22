@@ -41,6 +41,7 @@ type Fetcher interface {
 // Options configures a crawl.
 type Options struct {
 	MaxPages int
+	Seeds    []*url.URL
 	// MaxDepth is the link distance from the start URL; 0 fetches only the
 	// start URL. Unlike the other limits, the zero value is meaningful.
 	MaxDepth    int
@@ -185,6 +186,7 @@ func Crawl(ctx context.Context, f Fetcher, start *url.URL, opts Options) *Result
 
 	c := &crawl{
 		opts:   opts,
+		scope:  urlnorm.NewScope(start),
 		f:      f,
 		guard:  urlnorm.NewTrapGuard(opts.TrapLimits),
 		seen:   map[string]bool{},
@@ -230,6 +232,7 @@ func stopReason(err error) StopReason {
 }
 
 type crawl struct {
+	scope  urlnorm.Scope
 	opts   Options
 	f      Fetcher
 	guard  *urlnorm.TrapGuard
@@ -301,6 +304,13 @@ func (c *crawl) fetchPage(ctx context.Context, u *url.URL, depth int) *Page {
 // and returns the admissible unseen URLs sorted.
 func (c *crawl) nextLevel(pages []*Page, depth int) []*url.URL {
 	var candidates []string
+	if depth == 1 {
+		for _, u := range c.opts.Seeds {
+			if u != nil && c.scope.Contains(u) {
+				candidates = append(candidates, u.String())
+			}
+		}
+	}
 	for _, p := range pages {
 		// A redirect target is considered seen so it is not fetched again.
 		if p.Response != nil && p.Response.FinalURL != "" {

@@ -82,10 +82,16 @@ func Extract(root *html.Node, base *url.URL) *Result {
 			return false
 		}
 		if n.Type == html.ElementNode && n.DataAtom == atom.Script && n.Namespace == "" && isJSONLD(attr(n, "type")) {
+			if len(scripts) >= MaxBlocks {
+				r.Truncated = true
+				return false
+			}
 			var b strings.Builder
 			for c := n.FirstChild; c != nil; c = c.NextSibling {
 				if c.Type == html.TextNode {
-					b.WriteString(c.Data)
+					if b.Len() <= MaxBlockBytes {
+						b.WriteString(c.Data[:min(len(c.Data), MaxBlockBytes+1-b.Len())])
+					}
 				}
 			}
 			scripts = append(scripts, b.String())
@@ -224,6 +230,10 @@ func (w *walker) node(m map[string]any, path string, depth int, top bool) {
 }
 
 func (w *walker) value(v any, path string, depth int) {
+	if depth > MaxDepth || w.nodes > MaxNodes {
+		w.r.Truncated = true
+		return
+	}
 	switch t := v.(type) {
 	case map[string]any:
 		w.node(t, path, depth, false)

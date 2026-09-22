@@ -8,66 +8,6 @@ import (
 	"github.com/pan-dolina/crawlgrade/internal/findings"
 )
 
-// validHreflang reports whether value is a valid hreflang target: an ISO
-// 639-1 language code, optionally followed by a hyphen and an ISO 3166-1
-// alpha-2 region code. "x-default" is the special fallback marker.
-func validHreflang(value string) bool {
-	value = strings.ToLower(strings.TrimSpace(value))
-	if value == "x-default" {
-		return true
-	}
-	parts := strings.SplitN(value, "-", 2)
-	if len(parts[0]) != 2 || !isAlpha2(parts[0]) {
-		return false
-	}
-	if len(parts) == 1 {
-		return true
-	}
-	return len(parts[1]) == 2 && isAlpha2(parts[1])
-}
-
-func isAlpha2(s string) bool {
-	if len(s) != 2 {
-		return false
-	}
-	for i := 0; i < len(s); i++ {
-		c := s[i]
-		if c < 'a' || c > 'z' {
-			return false
-		}
-	}
-	return true
-}
-
-// HreflangFindings reports problems with the hreflang set of one page. A page
-// with no hreflang links returns no findings; the "no hreflang" finding is
-// produced by the caller when the page has language or regional versions.
-func (p *Page) HreflangFindings() []findings.Finding {
-	if len(p.Hreflangs) == 0 {
-		return nil
-	}
-	var out []findings.Finding
-	var invalid []string
-	hasSelf := false
-	seen := map[string]bool{}
-	for _, h := range p.Hreflangs {
-		if !validHreflang(h.Target) {
-			invalid = append(invalid, "hreflang: "+findings.Truncate(h.Target, 60))
-		}
-		if h.Href == p.URL {
-			hasSelf = true
-		}
-		seen[h.Href] = true
-	}
-	if len(invalid) > 0 {
-		out = append(out, findings.HreflangInvalid.New(p.URL, invalid...))
-	}
-	if !hasSelf {
-		out = append(out, findings.HreflangSelfMissing.New(p.URL))
-	}
-	return out
-}
-
 // SocialFindings reports problems with the social preview metadata of one
 // page. A page without any social tags is not itself a finding; the
 // "no social metadata" finding is produced by the caller when the page is

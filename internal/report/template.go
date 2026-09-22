@@ -10,6 +10,7 @@ const htmlTemplateContent = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CrawlGrade report — {{.StartURL}}</title>
 <style>
@@ -65,13 +66,17 @@ footer { margin-top: 2rem; color: #888; font-size: .8rem; }
 <div class="stat info"><b>{{.Counts.Info}}</b>info</div>
 <div class="stat"><b>{{.Pages}}</b>pages</div>
 </div>
+{{if .Report.Scores}}<p>Technical SEO score: {{.Report.Scores.SEO}}/100. Passive web hygiene: {{.Report.Scores.WebHygiene}}/100. Scores describe observed checks, not rankings.</p>{{end}}
+{{if .Report.Baseline}}<h2>Baseline comparison</h2><p>{{len .Report.Baseline.New}} new findings; {{len .Report.Baseline.Resolved}} resolved. Page delta: {{.Report.Baseline.PageDelta}}. SEO score delta: {{.Report.Baseline.SEOScoreDelta}}.</p>{{end}}
+{{if .Report.Terms}}<h2>Site terms</h2><table><tr><th>Term</th><th>Strength</th></tr>{{range .Report.Terms}}<tr><td>{{.Term}}</td><td>{{.Strength}}</td></tr>{{end}}</table>{{end}}
+{{if .Report.Pages}}<h2>Pages and internal links</h2><table><tr><th>URL</th><th>Status</th><th>Inbound</th><th>Outbound</th><th>Terms</th></tr>{{range .Report.Pages}}<tr><td>{{.URL}}</td><td>{{.Status}}</td><td>{{.Inbound}}</td><td>{{.Outbound}}</td><td>{{range .Terms}}{{.Term}} ({{.Strength}}); {{end}}</td></tr>{{end}}</table>{{end}}
 {{if .Stop}}<p>Crawl stopped: <strong>{{.Stop}}</strong></p>{{end}}
 {{if .Groups}}
 {{range .Groups}}
 <h2>{{.Title}} <span class="empty">{{len .Findings}} finding{{if ne (len .Findings) 1}}s{{end}}</span></h2>
 {{range .Findings}}
 <div class="finding">
-<div><span class="sev sev-{{.Severity}}">{{.Severity}}</span><span class="title">{{.Title}}</span></div>
+<div><span class="sev sev-{{.Severity}}">{{.Severity}}</span><span class="title">{{.ID}} {{.Title}}</span></div>
 {{if .URL}}<p class="url-line">{{.URL}}</p>{{end}}
 {{if .Evidence}}<ul class="evidence">{{range .Evidence}}<li>{{.}}</li>{{end}}</ul>{{end}}
 {{if .Rec}}<p class="rec">{{.Rec}}</p>{{end}}

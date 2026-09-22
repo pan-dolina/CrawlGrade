@@ -56,7 +56,7 @@ func TestSelfLink(t *testing.T) {
 	r := Analyze([]*Page{
 		page("https://example.com/a", true, Link{URL: "https://example.com/a"}),
 	})
-	if ids(r.Findings()) != "SEO-LINK-002" {
+	if ids(r.Findings()) != "SEO-LINK-001,SEO-LINK-002" {
 		t.Fatalf("self = %s", ids(r.Findings()))
 	}
 }
@@ -70,6 +70,7 @@ func TestBrokenInternalTarget(t *testing.T) {
 			Link{URL: "https://example.com/missing"},
 			Link{URL: "https://example.com/img.png", Resource: true},
 		),
+		&Page{URL: "https://example.com/missing", Status: 404},
 	})
 	got := ids(r.Findings())
 	if got != "SEO-LINK-004,SEO-LINK-001" {

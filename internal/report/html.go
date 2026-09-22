@@ -14,6 +14,7 @@ import (
 // rendered in.
 func renderHTML(w io.Writer, rep *Report) error {
 	data := htmlModel{
+		Report:   rep,
 		StartURL: rep.Summary.StartURL,
 		Pages:    rep.Summary.Pages,
 		Counts:   summaryCounts(rep.Summary.Findings),
@@ -32,6 +33,7 @@ func renderHTML(w io.Writer, rep *Report) error {
 // htmlModel is the template model. Every string field is escaped by
 // html/template for the context it is rendered in.
 type htmlModel struct {
+	Report   *Report
 	StartURL string
 	Pages    int
 	Counts   severityCounts
@@ -91,6 +93,7 @@ type groupModel struct {
 
 // findingModel is a template-safe view of a finding.
 type findingModel struct {
+	ID       string
 	Severity string
 	Title    string
 	URL      string
@@ -109,6 +112,7 @@ func reportGroups(rep *Report) []groupModel {
 		gm := groupModel{Title: findingsCategoryName(group), Severity: mostSevereSeverity(fs)}
 		for _, f := range fs {
 			gm.Findings = append(gm.Findings, findingModel{
+				ID:       f.ID,
 				Severity: f.Severity.String(),
 				Title:    f.Title,
 				URL:      f.URL,

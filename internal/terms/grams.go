@@ -60,6 +60,9 @@ func Top(counts map[string]int, limit int) []Ngram {
 		}
 		return strings.Compare(a.key, b.key)
 	})
+	if limit <= 0 {
+		limit = len(pairs)
+	}
 	limit = min(limit, len(pairs))
 	out := make([]Ngram, 0, limit)
 	for _, p := range pairs[:limit] {

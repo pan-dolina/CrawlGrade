@@ -13,6 +13,10 @@ import (
 // A finding is "new" when it appears in current but not baseline, and
 // "resolved" when it appeared in baseline but not current.
 type Diff struct {
+	PageDelta            int `json:"page_delta"`
+	FindingDelta         int `json:"finding_delta"`
+	SEOScoreDelta        int `json:"seo_score_delta"`
+	WebHygieneScoreDelta int `json:"web_hygiene_score_delta"`
 	// New lists findings present in the current report but absent from the
 	// baseline, sorted.
 	New []findings.Finding
@@ -28,7 +32,7 @@ type Diff struct {
 // Equal reports whether the diff is empty: the two reports produced the same
 // findings in the same groups.
 func (d Diff) Equal() bool {
-	return len(d.New) == 0 && len(d.Resolved) == 0 && len(d.AddedGroups) == 0 && len(d.RemovedGroups) == 0
+	return d.PageDelta == 0 && d.FindingDelta == 0 && d.SEOScoreDelta == 0 && d.WebHygieneScoreDelta == 0 && len(d.New) == 0 && len(d.Resolved) == 0 && len(d.AddedGroups) == 0 && len(d.RemovedGroups) == 0
 }
 
 // Key identifies a finding uniquely for comparison. Two findings with the same
@@ -42,10 +46,17 @@ func Key(f findings.Finding) string {
 // Compare returns the difference between baseline and current. Both reports
 // must share the same schema version; a mismatch is reported as an error.
 func Compare(current, baseline *Report) (*Diff, error) {
+	if current == nil || baseline == nil {
+		return nil, fmt.Errorf("cannot diff a nil report")
+	}
 	if baseline.Version != current.Version {
 		return nil, fmt.Errorf("cannot diff reports with different schema versions (%s vs %s)", baseline.Version, current.Version)
 	}
-	diff := &Diff{}
+	diff := &Diff{PageDelta: current.Summary.Pages - baseline.Summary.Pages, FindingDelta: len(flatten(current)) - len(flatten(baseline))}
+	if current.Scores != nil && baseline.Scores != nil {
+		diff.SEOScoreDelta = current.Scores.SEO - baseline.Scores.SEO
+		diff.WebHygieneScoreDelta = current.Scores.WebHygiene - baseline.Scores.WebHygiene
+	}
 	currentByKey := map[string]findings.Finding{}
 	for _, f := range flatten(current) {
 		currentByKey[Key(f)] = f
@@ -59,15 +70,9 @@ func Compare(current, baseline *Report) (*Diff, error) {
 			diff.New = append(diff.New, f)
 		}
 	}
-	for k := range baselineByKey {
+	for k, f := range baselineByKey {
 		if _, ok := currentByKey[k]; !ok {
-			// Re-look up the finding to attach its metadata.
-			for _, f := range flatten(baseline) {
-				if Key(f) == k {
-					diff.Resolved = append(diff.Resolved, f)
-					break
-				}
-			}
+			diff.Resolved = append(diff.Resolved, f)
 		}
 	}
 	diff.AddedGroups = missingGroups(current.Groups, baseline.Groups)
@@ -109,6 +114,7 @@ func (d *Diff) RenderTerminal(w *strings.Builder) {
 		w.WriteString("No changes since the baseline.\n")
 		return
 	}
+	fmt.Fprintf(w, "Pages: %+d; findings: %+d; SEO score: %+d; web hygiene score: %+d\n", d.PageDelta, d.FindingDelta, d.SEOScoreDelta, d.WebHygieneScoreDelta)
 	if len(d.New) > 0 {
 		w.WriteString(fmt.Sprintf("\n%d new finding(s):\n", len(d.New)))
 		for _, f := range d.New {
@@ -144,6 +150,9 @@ func Load(data []byte) (*Report, error) {
 	var rep Report
 	if err := json.Unmarshal(data, &rep); err != nil {
 		return nil, err
+	}
+	if rep.Version != SchemaVersion || rep.Groups == nil {
+		return nil, fmt.Errorf("unsupported or invalid report schema %q", rep.Version)
 	}
 	return &rep, nil
 }

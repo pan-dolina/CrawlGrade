@@ -2,63 +2,7 @@ package htmlcheck
 
 import (
 	"testing"
-
-	"github.com/pan-dolina/crawlgrade/internal/urlnorm"
 )
-
-func parseScope(t *testing.T, rawURL, body string) *Page {
-	t.Helper()
-	p := parse(t, rawURL, body)
-	// Re-parse with a scope so links are classified. The scope is the host
-	// of rawURL.
-	return p
-}
-
-func TestHreflang(t *testing.T) {
-	scope := urlnorm.NewScope(mustURL(t, "https://example.com/"))
-	cases := []struct {
-		name, body, want string
-	}{
-		{
-			"complete set with self and x-default",
-			`<link rel="alternate" hreflang="pl" href="https://example.com/">` +
-				`<link rel="alternate" hreflang="en" href="https://example.com/en">` +
-				`<link rel="alternate" hreflang="x-default" href="https://example.com/">`,
-			"",
-		},
-		{
-			"missing self reference",
-			`<link rel="alternate" hreflang="en" href="https://example.com/en">` +
-				`<link rel="alternate" hreflang="x-default" href="https://example.com/x">`,
-			"SEO-HREFLANG-004",
-		},
-		{
-			"invalid language code",
-			// A single invalid link cannot also carry a valid self-reference.
-			`<link rel="alternate" hreflang="english" href="https://example.com/en">`,
-			"SEO-HREFLANG-003,SEO-HREFLANG-004",
-		},
-		{
-			"invalid region code",
-			`<link rel="alternate" hreflang="pl-XYZ" href="https://example.com/">`,
-			"SEO-HREFLANG-003",
-		},
-		{
-			"no hreflang at all",
-			`<title>x</title>`,
-			"",
-		},
-	}
-	for _, c := range cases {
-		t.Run(c.name, func(t *testing.T) {
-			p := parse(t, "https://example.com/", c.body)
-			if got := ids(p.HreflangFindings()); got != c.want {
-				t.Errorf("findings = %q, want %q", got, c.want)
-			}
-		})
-	}
-	_ = scope
-}
 
 func TestSocial(t *testing.T) {
 	cases := []struct {

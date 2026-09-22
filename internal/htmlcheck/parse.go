@@ -41,6 +41,11 @@ type Page struct {
 	Hreflangs []Hreflang `json:"-"`
 	Social    []Social   `json:"-"`
 
+	// Lang is the lang attribute of the <html> element; HasLang reports
+	// whether the attribute was present.
+	Lang    string `json:"lang,omitempty"`
+	HasLang bool   `json:"-"`
+
 	base *url.URL
 	// scope identifies the audited site; links outside it are external.
 	scope urlnorm.Scope
@@ -83,6 +88,7 @@ func Parse(body []byte, pageURL *url.URL, contentType string, scope urlnorm.Scop
 	}
 	p := &Page{URL: pageURL.String(), base: pageURL, scope: scope}
 	p.setBase(root)
+	p.setLang(root)
 	walk(root, func(n *html.Node) bool {
 		if n.Type != html.ElementNode || n.Namespace != "" {
 			// SVG and MathML have their own <title> and <a> elements that do
@@ -115,7 +121,10 @@ func Parse(body []byte, pageURL *url.URL, contentType string, scope urlnorm.Scop
 			switch {
 			case hasToken(attr(n, "rel"), "canonical"):
 				p.addCanonical(attr(n, "href"), "html", inHead(n))
-			case hasToken(attr(n, "rel"), "alternate") && attr(n, "hreflang") != "":
+			case hasToken(attr(n, "rel"), "alternate") && len(p.Hreflangs) < 100:
+				if _, present := attrOK(n, "hreflang"); !present {
+					break
+				}
 				if href := strings.TrimSpace(attr(n, "href")); href != "" {
 					if u, err := p.Resolve(href); err == nil {
 						p.Hreflangs = append(p.Hreflangs, Hreflang{Href: u.String(), Target: strings.TrimSpace(attr(n, "hreflang"))})
@@ -155,7 +164,7 @@ func (p *Page) setBase(root *html.Node) {
 
 // Resolve resolves a reference found in the document against its base URL.
 func (p *Page) Resolve(ref string) (*url.URL, error) {
-	return p.base.Parse(strings.TrimSpace(ref))
+	return urlnorm.Resolve(p.base, ref)
 }
 
 // walk visits nodes depth-first without recursion, so deeply nested

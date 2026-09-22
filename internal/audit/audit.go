@@ -11,10 +11,15 @@ package audit
 
 import (
 	"context"
+	"github.com/pan-dolina/crawlgrade/internal/duplicates"
+	"github.com/pan-dolina/crawlgrade/internal/structureddata"
 	"net/url"
+	"sort"
+	"time"
 
 	"github.com/pan-dolina/crawlgrade/internal/content"
 	"github.com/pan-dolina/crawlgrade/internal/crawler"
+	"github.com/pan-dolina/crawlgrade/internal/fetcher"
 	"github.com/pan-dolina/crawlgrade/internal/findings"
 	"github.com/pan-dolina/crawlgrade/internal/htmlcheck"
 	"github.com/pan-dolina/crawlgrade/internal/links"
@@ -28,37 +33,70 @@ import (
 
 // Options configures an audit.
 type Options struct {
-	// MaxPages, MaxDepth and Concurrency mirror the crawler limits. The zero
-	// values are the crawler defaults.
+	// MaxPages and Concurrency default when zero. MaxDepth zero audits only
+	// the start URL; callers wanting deeper crawls must set it explicitly.
+	MaxDuration time.Duration
 	MaxPages    int
 	MaxDepth    int
 	Concurrency int
 	// AllowPrivate permits auditing local development sites.
-	AllowPrivate bool
+	AllowPrivate       bool
+	Keywords           []string
+	CheckExternalLinks bool
 }
 
 // Result is the outcome of an audit.
 type Result struct {
 	// Report is the assembled report. It is always non-nil.
 	Report *report.Report
+	Crawl  *crawler.Result
+	Err    error
 }
 
 // Run audits start and returns its report. The fetcher performs every request;
 // it must embed the network policy.
 func Run(ctx context.Context, f crawler.Fetcher, start *url.URL, opts Options) *Result {
+	duration := opts.MaxDuration
+	if duration <= 0 {
+		duration = crawler.DefaultMaxDuration
+	}
+	ctx, cancel := context.WithTimeout(ctx, duration)
+	defer cancel()
 	// robots.txt and the sitemap are fetched before the crawl so their rules
 	// govern the crawl and their findings feed the report.
 	robotsFile := robots.Fetch(ctx, f, start)
-	sitemapResult := sitemap.Collect(ctx, f, []sitemap.Seed{sitemap.DefaultSeed(start)}, urlnorm.NewScope(start), sitemap.DefaultLimits())
+	seeds := []sitemap.Seed{sitemap.DefaultSeed(start)}
+	for _, loc := range robotsFile.Sitemaps {
+		seeds = append(seeds, sitemap.Seed{URL: loc, Source: "robots.txt", Declared: true})
+	}
+	sitemapResult := sitemap.Collect(ctx, f, seeds, urlnorm.NewScope(start), sitemap.DefaultLimits())
 
-	allowed := allowedFunc(robotsFile)
+	var seedsToCrawl []*url.URL
+	for _, entry := range sitemapResult.URLs {
+		if u, err := urlnorm.Parse(entry.Loc); err == nil {
+			seedsToCrawl = append(seedsToCrawl, u)
+		}
+	}
+	origin := func(u *url.URL) string { return u.Scheme + "://" + u.Host }
+	policies := map[string]*robots.File{origin(start): robotsFile}
+	allowed := func(u *url.URL) bool {
+		key := origin(u)
+		file := policies[key]
+		if file == nil {
+			file = robots.Fetch(ctx, f, u)
+			policies[key] = file
+		}
+		return file.Allowed(u)
+	}
 	crawl := crawler.Crawl(ctx, f, start, crawler.Options{
 		MaxPages:    defaultInt(opts.MaxPages, crawler.DefaultMaxPages),
-		MaxDepth:    defaultInt(opts.MaxDepth, crawler.DefaultMaxDepth),
+		MaxDuration: duration,
+		MaxDepth:    opts.MaxDepth,
 		Concurrency: defaultInt(opts.Concurrency, crawler.DefaultConcurrency),
 		TrapLimits:  urlnorm.DefaultTrapLimits(),
 		Allowed:     allowed,
 		Process:     processPage,
+		Seeds:       seedsToCrawl,
 	})
 
 	groups := map[string][]findings.Finding{
@@ -69,9 +107,44 @@ func Run(ctx context.Context, f crawler.Fetcher, start *url.URL, opts Options) *
 		report.GroupLinking:    linkingFindings(crawl),
 		report.GroupWebHygiene: webHygieneFindings(crawl),
 	}
+	var origins []string
+	for key := range policies {
+		if key != origin(start) {
+			origins = append(origins, key)
+		}
+	}
+	sort.Strings(origins)
+	for _, key := range origins {
+		u, _ := url.Parse(key)
+		groups[report.GroupCrawl] = append(groups[report.GroupCrawl], policies[key].Findings(u)...)
+	}
 	groups[report.GroupContent] = append(groups[report.GroupContent], termFindings(crawl)...)
 
-	return &Result{Report: report.New(start.String(), crawl, groups)}
+	var dupPages []*duplicates.Page
+	for _, c := range contentResults(crawl) {
+		if !c.NoText {
+			dupPages = append(dupPages, duplicates.NewPage(c))
+		}
+	}
+	groups[report.GroupContent] = append(groups[report.GroupContent], duplicates.Analyze(dupPages).Findings()...)
+	groups[report.GroupCrawl] = append(groups[report.GroupCrawl], crawlFindings(crawl, sitemapResult, robotsFile)...)
+	groups[report.GroupLinking] = append(groups[report.GroupLinking], observedLinkFindings(crawl)...)
+	if opts.CheckExternalLinks {
+		groups[report.GroupLinking] = append(groups[report.GroupLinking], checkExternal(ctx, f, crawl)...)
+	}
+	if start.Scheme == "https" && len(crawl.Pages) > 0 && ctx.Err() == nil {
+		httpURL := *start
+		httpURL.Scheme = "http"
+		resp, err := f.Fetch(ctx, fetcher.Request{URL: httpURL.String(), Method: "HEAD"})
+		if err != nil || resp == nil {
+			groups[report.GroupWebHygiene] = append(groups[report.GroupWebHygiene], findings.WebHygieneRedirect.New(start.String(), "HTTP redirect check unavailable"))
+		} else if len(resp.Redirects) == 0 || !isHTTPS(resp.FinalURL) {
+			groups[report.GroupWebHygiene] = append(groups[report.GroupWebHygiene], findings.WebHygieneRedirect.New(start.String(), resp.FinalURL))
+		}
+	}
+	rep := report.New(start.String(), crawl, groups)
+	enrichReport(rep, crawl, opts.Keywords)
+	return &Result{Report: rep, Crawl: crawl, Err: ctx.Err()}
 }
 
 // defaultInt returns v when it is positive, otherwise def. The audit options
@@ -84,20 +157,15 @@ func defaultInt(v, def int) int {
 	return v
 }
 
-// allowedFunc returns the crawler Allowed callback from the robots.txt
-// outcome. A missing robots.txt (4xx) allows everything; an unavailable one
-// (5xx, network failure, redirect to a blocked destination) disallows
-// everything, as RFC 9309 requires. robots.File.Allowed implements both.
-func allowedFunc(file *robots.File) func(*url.URL) bool {
-	return file.Allowed
-}
-
 // parsedPage is the analysis result stored on crawler.Page.Data. It carries
 // the parse scope, which CanonicalFindings needs and which is not otherwise
 // reachable from the exported Page model.
 type parsedPage struct {
-	Page  *htmlcheck.Page
-	Scope urlnorm.Scope
+	Page       *htmlcheck.Page
+	Scope      urlnorm.Scope
+	Content    *content.Result
+	Structured []findings.Finding
+	Hygiene    []findings.Finding
 }
 
 // processPage is the crawler Process callback. It parses each HTML page with
@@ -107,16 +175,25 @@ func processPage(_ context.Context, p *crawler.Page) []*url.URL {
 	if p.Response == nil || p.Response.Body == nil {
 		return nil
 	}
-	base, err := url.Parse(p.URL)
+	final := p.Response.FinalURL
+	if final == "" {
+		final = p.URL
+	}
+	base, err := url.Parse(final)
 	if err != nil {
 		return nil
 	}
-	scope := urlnorm.NewScope(base)
-	hp, _, err := htmlcheck.Parse(p.Response.Body, base, p.Response.ContentType, scope)
+	requested, _ := url.Parse(p.URL)
+	scope := urlnorm.NewScope(requested)
+	hp, root, err := htmlcheck.Parse(p.Response.Body, base, p.Response.Header.Get("Content-Type"), scope)
 	if err != nil {
 		return nil
 	}
-	p.Data = parsedPage{Page: hp, Scope: scope}
+	hp.AddRobotsHeaders(p.Response.Header.Values("X-Robots-Tag"))
+	hp.AddHeaderCanonicals(p.Response.Header.Values("Link"))
+	sd := structureddata.Extract(root, base)
+	sf := append(sd.Findings(hp.URL), sd.BreadcrumbFindings(hp.URL)...)
+	p.Data = parsedPage{Page: hp, Scope: scope, Content: content.ExtractTree(hp.URL, root), Structured: sf, Hygiene: webhygiene.MarkupFindings(hp.URL, root)}
 	return followLinks(hp)
 }
 
@@ -135,6 +212,13 @@ func followLinks(hp *htmlcheck.Page) []*url.URL {
 		}
 		out = append(out, u)
 	}
+	for _, img := range hp.Images {
+		if !img.External && img.Src != "" {
+			if u, err := urlnorm.Parse(img.Src); err == nil {
+				out = append(out, u)
+			}
+		}
+	}
 	return out
 }
 
@@ -146,6 +230,9 @@ func metadataFindings(crawl *crawler.Result) []findings.Finding {
 	start := ""
 	if len(crawl.Pages) > 0 {
 		start = crawl.Pages[0].URL
+		if crawl.Pages[0].Response != nil && crawl.Pages[0].Response.FinalURL != "" {
+			start = crawl.Pages[0].Response.FinalURL
+		}
 	}
 	for _, pp := range pages {
 		hp := pp.Page
@@ -154,7 +241,10 @@ func metadataFindings(crawl *crawler.Result) []findings.Finding {
 		out = append(out, hp.CanonicalFindings(pp.Scope)...)
 		out = append(out, hp.RobotsFindings(hp.URL == start)...)
 		out = append(out, hp.HreflangFindings()...)
+		out = append(out, hp.LangFindings()...)
 		out = append(out, hp.SocialFindings()...)
+		out = append(out, hp.SocialRequiredFindings()...)
+		out = append(out, hp.ImageFindings()...)
 		out = append(out, hp.AnchorFindings()...)
 	}
 	if len(pages) > 0 {
@@ -164,6 +254,7 @@ func metadataFindings(crawl *crawler.Result) []findings.Finding {
 		}
 		out = append(out, htmlcheck.DuplicateMetadataFindings(hpPages)...)
 		out = append(out, htmlcheck.DuplicateH1Findings(hpPages)...)
+		out = append(out, htmlcheck.HreflangSiteFindings(hpPages)...)
 	}
 	return out
 }
@@ -171,12 +262,8 @@ func metadataFindings(crawl *crawler.Result) []findings.Finding {
 // contentFindings runs the per-page content extraction findings.
 func contentFindings(crawl *crawler.Result) []findings.Finding {
 	var out []findings.Finding
-	for _, p := range crawl.Pages {
-		if p.Response == nil || p.Response.Body == nil {
-			continue
-		}
-		ext := content.Extract(p.URL, string(p.Response.Body))
-		out = append(out, ext.Findings()...)
+	for _, c := range contentResults(crawl) {
+		out = append(out, c.Findings()...)
 	}
 	return out
 }
@@ -190,10 +277,13 @@ func termFindings(crawl *crawler.Result) []findings.Finding {
 	return terms_strength.Analyze(pages).Findings()
 }
 
-// structuredFindings runs the structured-data checks. It is reserved for the
-// next milestone; the group is defined so the report shape is stable.
+// structuredFindings collects checks performed before response bodies were dropped.
 func structuredFindings(crawl *crawler.Result) []findings.Finding {
-	return nil
+	var out []findings.Finding
+	for _, p := range parsedPages(crawl) {
+		out = append(out, p.Structured...)
+	}
+	return out
 }
 
 // linkingFindings runs the site-wide link-graph analysis.
@@ -211,17 +301,20 @@ func webHygieneFindings(crawl *crawler.Result) []findings.Finding {
 	if len(checks) == 0 {
 		return nil
 	}
-	return webhygiene.Findings(checks)
+	out := webhygiene.Findings(checks)
+	for _, p := range parsedPages(crawl) {
+		out = append(out, p.Hygiene...)
+	}
+	return out
 }
 
 // contentResults returns the extracted content of every crawled page.
 func contentResults(crawl *crawler.Result) []*content.Result {
 	var out []*content.Result
-	for _, p := range crawl.Pages {
-		if p.Response == nil || p.Response.Body == nil {
-			continue
+	for _, p := range parsedPages(crawl) {
+		if p.Content != nil && p.Page.Robots.Indexable() {
+			out = append(out, p.Content)
 		}
-		out = append(out, content.Extract(p.URL, string(p.Response.Body)))
 	}
 	return out
 }
@@ -242,12 +335,17 @@ func parsedPages(crawl *crawler.Result) []parsedPage {
 // linkPages builds the links.Page inputs from the crawl.
 func linkPages(crawl *crawler.Result) []*links.Page {
 	var out []*links.Page
-	for _, pp := range parsedPages(crawl) {
-		out = append(out, &links.Page{
-			URL:       pp.Page.URL,
-			Links:     toLinkValues(pp.Page.Links),
-			Indexable: pp.Page.Robots.Indexable(),
-		})
+	for i, p := range crawl.Pages {
+		lp := &links.Page{URL: p.URL, Failed: p.Err != nil, Start: i == 0}
+		if p.Response != nil {
+			lp.Status = p.Response.Status
+		}
+		if pp, ok := p.Data.(parsedPage); ok {
+			lp.URL = pp.Page.URL
+			lp.Links = toLinkValues(pp.Page.Links)
+			lp.Indexable = pp.Page.Robots.Indexable()
+		}
+		out = append(out, lp)
 	}
 	return out
 }
@@ -263,7 +361,7 @@ func hygieneChecks(crawl *crawler.Result) []webhygiene.Check {
 			URL:     p.URL,
 			Header:  p.Response.Header,
 			Body:    string(p.Response.Body),
-			IsHTTPS: isHTTPS(p.URL),
+			IsHTTPS: isHTTPS(p.Response.FinalURL),
 			Status:  p.Response.Status,
 		})
 	}
@@ -280,6 +378,7 @@ func toLinkValues(hpLinks []htmlcheck.Link) []links.Link {
 			Resource:   l.Resource,
 			AnchorText: l.AnchorText,
 			Empty:      l.Empty,
+			NoFollow:   l.NoFollow,
 		})
 	}
 	return out

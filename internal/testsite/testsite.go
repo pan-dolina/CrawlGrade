@@ -73,7 +73,7 @@ func Handler() http.Handler {
 		}
 		w.WriteHeader(status)
 		if r.Method == http.MethodGet {
-			_, _ = w.Write(body)
+			_, _ = w.Write(body) // #nosec G705 -- deliberately hostile local test fixtures, not a public web service.
 		}
 	})
 }

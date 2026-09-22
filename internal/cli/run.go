@@ -2,8 +2,11 @@ package cli
 
 import (
 	"bytes"
+	"encoding/json"
+	"github.com/pan-dolina/crawlgrade/internal/crawler"
+	"github.com/pan-dolina/crawlgrade/internal/urlnorm"
 	"io"
-	"net/url"
+	"math"
 	"os"
 	"strings"
 
@@ -17,19 +20,66 @@ import (
 
 // runAudit crawls start and writes the report in the requested format.
 func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string, diffMode, noColor, allowPrivate bool, maxPages, maxDepth, conc int) error {
-	u, err := url.Parse(start)
+	u, err := urlnorm.Parse(start)
 	if err != nil {
 		return usageErrorf("invalid start URL %q: %v", start, err)
 	}
 
+	if _, err := report.ParseFormat(format); err != nil {
+		return usageErrorf("%v", err)
+	}
+	if failOn != "" {
+		if _, err := findings.ParseSeverity(failOn); err != nil {
+			return usageErrorf("--fail-on: %v", err)
+		}
+	}
+	if maxPages < 1 || maxPages > 10000 || maxDepth < 0 || maxDepth > 100 || conc < 1 || conc > crawler.MaxConcurrency {
+		return usageErrorf("limits: pages 1..10000, depth 0..100, concurrency 1..%d", crawler.MaxConcurrency)
+	}
+	if diffMode && format == "html" {
+		return usageErrorf("--diff supports terminal or json output")
+	}
+	if diffMode && baseline == "" {
+		return usageErrorf("--diff requires --baseline")
+	}
+	if baseline != "" {
+		data, err := readBaseline(baseline)
+		if err != nil {
+			return err
+		}
+		if _, err := report.Load(data); err != nil {
+			return usageErrorf("invalid baseline: %v", err)
+		}
+	}
+	asJSON, _ := cmd.Flags().GetBool("json")
+	if asJSON {
+		format = "json"
+	}
+	output, _ := cmd.Flags().GetString("output")
+	timeout, _ := cmd.Flags().GetDuration("timeout")
+	duration, _ := cmd.Flags().GetDuration("max-duration")
+	if duration <= 0 {
+		return usageErrorf("--max-duration must be positive")
+	}
+	ua, _ := cmd.Flags().GetString("user-agent")
+	rps, _ := cmd.Flags().GetFloat64("requests-per-second")
+	if timeout <= 0 || rps <= 0 || math.IsNaN(rps) || math.IsInf(rps, 0) || strings.TrimSpace(ua) == "" || strings.ContainsAny(ua, "\r\n") {
+		return usageErrorf("timeout and request rate must be positive; user agent must be a nonempty single line")
+	}
 	dialer := &netguard.Dialer{Policy: netguard.Policy{AllowPrivate: allowPrivate}}
-	f := fetcher.New(fetcher.Options{DialContext: dialer.DialContext})
+	f := fetcher.New(fetcher.Options{DialContext: dialer.DialContext, Timeout: timeout, UserAgent: ua, Wait: crawler.NewLimiter(rps).Wait})
+	defer f.Close()
 
+	keywords, _ := cmd.Flags().GetString("keywords")
+	external, _ := cmd.Flags().GetBool("check-external-links")
 	res := audit.Run(cmd.Context(), f, u, audit.Options{
-		MaxPages:     maxPages,
-		MaxDepth:     maxDepth,
-		Concurrency:  conc,
-		AllowPrivate: allowPrivate,
+		MaxPages:           maxPages,
+		MaxDuration:        duration,
+		MaxDepth:           maxDepth,
+		Concurrency:        conc,
+		AllowPrivate:       allowPrivate,
+		Keywords:           strings.Split(keywords, ","),
+		CheckExternalLinks: external,
 	})
 	rep := res.Report
 
@@ -37,8 +87,29 @@ func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string
 	if err != nil {
 		return err
 	}
-	if _, err := cmd.OutOrStdout().Write(out); err != nil {
-		return err
+	if output != "" {
+		// #nosec G306 -- reports may contain private site information.
+		if err := os.WriteFile(output, out, 0600); err != nil {
+			return withCode(ExitInternal, err)
+		}
+	} else if _, err := cmd.OutOrStdout().Write(out); err != nil {
+		return withCode(ExitInternal, err)
+	}
+	if cmd.Context().Err() != nil || res.Err != nil {
+		return silentExit(ExitIncomplete)
+	}
+	if res.Crawl.StopReason == crawler.StopStartDisallowed {
+		return silentExit(ExitBlocked)
+	}
+	if len(res.Crawl.Pages) == 0 {
+		return silentExit(ExitIncomplete)
+	}
+	first := res.Crawl.Pages[0]
+	if first.ErrorKind == crawler.ErrorBlocked {
+		return silentExit(ExitBlocked)
+	}
+	if first.Err != nil || first.Response == nil || first.Response.Status >= 400 || res.Crawl.StopReason == crawler.StopInterrupted || res.Crawl.StopReason == crawler.StopMaxDuration {
+		return silentExit(ExitIncomplete)
 	}
 	return exitFor(rep, failOn)
 }
@@ -80,11 +151,15 @@ func renderBaseline(w io.Writer, current *report.Report, baseline string, diffMo
 		return nil, err
 	}
 	if diffMode {
+		if format == "json" {
+			return json.MarshalIndent(diff, "", "  ")
+		}
 		var buf strings.Builder
 		diff.RenderTerminal(&buf)
-		return []byte(buf.String()), nil
+		return []byte(report.TerminalText(buf.String())), nil
 	}
-	// Full report mode: render the current report as usual.
+	// Full report mode retains the delta alongside current observations.
+	current.Baseline = diff
 	var out bytes.Buffer
 	if err := current.Render(&out, report.Format(format)); err != nil {
 		return nil, err
@@ -96,7 +171,7 @@ func renderBaseline(w io.Writer, current *report.Report, baseline string, diffMo
 func readBaseline(path string) ([]byte, error) {
 	// Reading the baseline is the whole point of --baseline: the user
 	// supplies the path, so this is intended file inclusion, not a traversal.
-	//nolint:gosec // G304: path is user-supplied by the --baseline flag.
+	// #nosec G304 -- baseline input is an explicit user-selected local file.
 	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, usageErrorf("cannot read baseline %q: %v", path, err)
@@ -114,7 +189,7 @@ func exitFor(rep *report.Report, failOn string) error {
 	if err != nil {
 		return usageErrorf("--fail-on: %v", err)
 	}
-	if reportMaxSeverity(rep) >= threshold {
+	if rep.Summary.Highest != "" && reportMaxSeverity(rep) >= threshold {
 		return silentExit(ExitFindings)
 	}
 	return nil

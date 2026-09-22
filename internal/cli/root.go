@@ -5,8 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/pan-dolina/crawlgrade/internal/crawler"
 	"io"
 	"os"
+	"time"
 
 	"github.com/spf13/cobra"
 )
@@ -80,7 +82,7 @@ func (a *App) newRootCommand() *cobra.Command {
 		Long:          rootLong,
 		SilenceUsage:  true,
 		SilenceErrors: true,
-		Args:          cobra.ArbitraryArgs,
+		Args:          cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 {
 				return cmd.Help()
@@ -96,7 +98,15 @@ func (a *App) newRootCommand() *cobra.Command {
 		return withCode(ExitUsage, err)
 	})
 	root.CompletionOptions.DisableDefaultCmd = true
-	root.AddCommand(a.newVersionCommand())
+	root.AddCommand(a.newVersionCommand(), a.newDiffCommand())
+	root.Flags().Bool("json", false, "write a JSON report")
+	root.Flags().String("output", "", "write the report to this file")
+	root.Flags().String("keywords", "", "comma-separated terms to include in term scores")
+	root.Flags().Duration("max-duration", crawler.DefaultMaxDuration, "maximum total audit duration")
+	root.Flags().Duration("timeout", 15*time.Second, "timeout per fetch including redirects")
+	root.Flags().String("user-agent", "CrawlGrade", "HTTP user agent (robots policy uses crawlgrade)")
+	root.Flags().Float64("requests-per-second", 5, "maximum request starts per second, including redirects")
+	root.Flags().Bool("check-external-links", false, "check external link status with bounded HEAD requests")
 	return root
 }
 
@@ -106,7 +116,7 @@ func flags(root *cobra.Command, format, failOn, baseline *string, diffMode, noCo
 	root.Flags().StringVar(baseline, "baseline", "", "path to a previous JSON report to diff against")
 	root.Flags().BoolVar(diffMode, "diff", false, "print only the difference from the baseline report")
 	root.Flags().BoolVar(noColor, "no-color", false, "disable ANSI colour in the terminal report")
-	root.Flags().IntVar(maxPages, "max-pages", 0, "maximum number of pages to crawl")
-	root.Flags().IntVar(maxDepth, "max-depth", 0, "maximum link depth from the start URL")
-	root.Flags().IntVar(conc, "concurrency", 0, "maximum concurrent requests")
+	root.Flags().IntVar(maxPages, "max-pages", crawler.DefaultMaxPages, "maximum number of pages to crawl")
+	root.Flags().IntVar(maxDepth, "max-depth", crawler.DefaultMaxDepth, "maximum link depth from the start URL")
+	root.Flags().IntVar(conc, "concurrency", crawler.DefaultConcurrency, "maximum concurrent requests")
 }

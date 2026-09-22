@@ -22,3 +22,8 @@ var (
 		Recommendation: "Send a Referrer-Policy such as strict-origin-when-cross-origin.",
 	})
 )
+
+var (
+	WebHygieneRedirect = register(Rule{ID: "WEB-HYGIENE-004", Category: CategoryWebHygiene, Severity: SeverityLow, Title: "HTTP to HTTPS redirect was not confirmed", Description: "The HTTP variant did not successfully redirect to HTTPS, or its response was unavailable.", Recommendation: "Verify that the HTTP variant redirects to the intended HTTPS URL."})
+	WebHygieneMixed    = register(Rule{ID: "WEB-HYGIENE-005", Category: CategoryWebHygiene, Severity: SeverityMedium, Title: "HTTPS page references HTTP resources", Description: "Some embedded resources use plain HTTP; browsers may upgrade or block them.", Recommendation: "Use HTTPS URLs for embedded resources."})
+)

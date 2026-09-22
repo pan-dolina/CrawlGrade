@@ -397,4 +397,10 @@ was retained; missing return links use the new SEO-HREFLANG-007 instead.
   counts. Headline stats link directly to corresponding finding sections with
   smooth scrolling and `:target` highlight rings. A floating back-to-top button
   provides quick navigation back to the report header in light and dark modes.
+- Quick wins cards were updated with high-contrast borders, distinct background
+  tints and severity-specific accent borders to ensure legibility on light and
+  dark backgrounds. Collapsible (`<details>`) LLM instruction prompts were added
+  both as a comprehensive site-wide action prompt and per-finding instructions,
+  enabling direct copy-paste into AI coding assistants for bug remediation.
+
 

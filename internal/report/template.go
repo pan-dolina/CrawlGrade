@@ -29,7 +29,7 @@ h1 { font-size: 1.4rem; margin: 0 0 .25rem; word-break: break-word; }
 .stat b { display: block; font-size: 1.5rem; line-height: 1.1; }
 .stat.critical b { color: #b00020; }
 .stat.high b { color: #e65100; }
-.stat.medium b { color: #f9a825; }
+.stat.medium b { color: #b45309; }
 .stat.low b { color: #2e7d32; }
 .stat.info b { color: #546e7a; }
 h2 { font-size: 1.1rem; border-bottom: 1px solid #ddd; padding-bottom: .25rem; margin-top: 2rem; }
@@ -40,14 +40,22 @@ th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: 
 .finding { border: 1px solid #eee; border-radius: .5rem; padding: .5rem .75rem; margin: .75rem 0; background: #fff; }
 .finding .sev { font-weight: 700; margin-right: .4rem; }
 .sev-critical { color: #b00020; }
-.sev-high { color: #e65100; }
-.sev-medium { color: #f9a825; }
-.sev-low { color: #2e7d32; }
-.sev-info { color: #546e7a; }
+.sev-high { color: #c2410c; }
+.sev-medium { color: #b45309; }
+.sev-low { color: #15803d; }
+.sev-info { color: #0369a1; }
 .finding .title { font-weight: 600; }
-.quickwins { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .75rem; }
-.quickwin { border: 1px solid #f0c36d; border-left: .35rem solid #e65100; border-radius: .5rem; padding: .75rem; background: #fffaf0; }
-.quickwin .title { font-weight: 700; }
+.quickwins { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .75rem; margin-top: .5rem; }
+.quickwin { border: 1px solid #cbd5e1; border-left: .35rem solid #e65100; border-radius: .5rem; padding: .85rem; background: #f8fafc; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08); }
+.quickwin.sev-border-critical { border-left-color: #b00020; }
+.quickwin.sev-border-high { border-left-color: #c2410c; }
+.quickwin.sev-border-medium { border-left-color: #b45309; }
+.quickwin.sev-border-low { border-left-color: #15803d; }
+.quickwin.sev-border-info { border-left-color: #0369a1; }
+.quickwin .title { font-weight: 700; color: #0f172a; }
+.quickwin .url-line { color: #334155; font-size: .85rem; word-break: break-all; margin: .25rem 0; }
+.quickwin .evidence { color: #1e293b; margin: .35rem 0 0; padding-left: 1.2rem; }
+.quickwin .rec { color: #0f172a; font-size: .9rem; font-weight: 500; margin-top: .45rem; padding-top: .45rem; border-top: 1px dashed #cbd5e1; }
 details { border: 1px solid #ddd; border-radius: .5rem; margin: .65rem 0; background: #fff; }
 details:target { border-color: #0056b3; box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.25); }
 summary { cursor: pointer; padding: .75rem; font-weight: 700; user-select: none; }
@@ -58,6 +66,14 @@ summary .count { color: #666; font-weight: 400; }
 .evidence { margin: .35rem 0 0; padding-left: 1.2rem; color: #333; }
 .rec { color: #444; font-size: .9rem; margin-top: .35rem; }
 .empty { color: #666; font-style: italic; }
+.llm-section { margin-top: 1rem; border-color: #818cf8; background: #faf5ff; }
+.llm-section summary { color: #4338ca; }
+.llm-intro { color: #475569; font-size: .9rem; margin: 0 0 .5rem; }
+.llm-prompt { background: #0f172a; color: #f8fafc; padding: .85rem 1rem; border-radius: .375rem; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .82rem; line-height: 1.45; white-space: pre-wrap; word-break: break-word; overflow-x: auto; border: 1px solid #1e293b; user-select: all; }
+.llm-hint { margin-top: .6rem; border: 1px solid #cbd5e1; border-radius: .375rem; background: #f1f5f9; }
+.llm-hint summary { padding: .4rem .6rem; font-size: .8rem; font-weight: 600; color: #475569; }
+.llm-hint .detail-body { padding: 0 .6rem .6rem; }
+.llm-hint .llm-prompt { background: #1e293b; padding: .5rem .75rem; font-size: .78rem; margin: 0; }
 footer { margin-top: 2rem; color: #888; font-size: .8rem; }
 .to-top { position: fixed; right: 1.25rem; bottom: 1.25rem; z-index: 100; border: 1px solid #bbb; border-radius: 999px; padding: .5rem .85rem; background: #fff; color: #333; text-decoration: none; font-size: .85rem; font-weight: 600; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15); display: inline-flex; align-items: center; gap: .25rem; transition: background .15s, box-shadow .15s, transform .15s; }
 .to-top:hover, .to-top:focus-visible { background: #f0f0f0; box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); transform: translateY(-2px); }
@@ -66,6 +82,28 @@ footer { margin-top: 2rem; color: #888; font-size: .8rem; }
   .stat, .finding, details { background: #1e1e1e; border-color: #333; }
   details:target { border-color: #4da3ff; box-shadow: 0 0 0 3px rgba(77, 163, 255, 0.3); }
   .stat-link:hover, .stat-link:focus-visible { border-color: #aaa; box-shadow: 0 0 0 2px #555; }
+  .sev-critical { color: #f87171; }
+  .sev-high { color: #fb923c; }
+  .sev-medium { color: #fbbf24; }
+  .sev-low { color: #4ade80; }
+  .sev-info { color: #38bdf8; }
+  .quickwin { background: #18202c; border-color: #334155; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
+  .quickwin .title { color: #f8fafc; }
+  .quickwin .url-line { color: #94a3b8; }
+  .quickwin .evidence { color: #cbd5e1; }
+  .quickwin .rec { color: #f1f5f9; border-top-color: #334155; }
+  .quickwin.sev-border-critical { border-left-color: #ef4444; }
+  .quickwin.sev-border-high { border-left-color: #f97316; }
+  .quickwin.sev-border-medium { border-left-color: #f59e0b; }
+  .quickwin.sev-border-low { border-left-color: #22c55e; }
+  .quickwin.sev-border-info { border-left-color: #38bdf8; }
+  .llm-section { background: #151329; border-color: #6366f1; }
+  .llm-section summary { color: #c7d2fe; }
+  .llm-intro { color: #94a3b8; }
+  .llm-prompt { background: #020617; border-color: #1e293b; color: #e2e8f0; }
+  .llm-hint { background: #1e293b; border-color: #334155; }
+  .llm-hint summary { color: #94a3b8; }
+  .llm-hint .llm-prompt { background: #0f172a; }
   th, .url, .url-line, footer { color: #aaa; }
   th { border-color: #333; }
   td { border-color: #2a2a2a; }
@@ -96,9 +134,37 @@ footer { margin-top: 2rem; color: #888; font-size: .8rem; }
 <details id="quick-wins" open>
 <summary><h2 class="section-title">Quick wins</h2>{{if .QuickWins}} <span class="count">({{len .QuickWins}})</span>{{end}}</summary>
 <div class="detail-body">
-{{if .QuickWins}}<div class="quickwins">{{range .QuickWins}}<div class="quickwin"><div><span class="sev sev-{{.Severity}}">{{.Severity}}</span> <span class="title">{{.ID}} {{.Title}}</span></div>{{if .URL}}<p class="url-line">{{.URL}}</p>{{end}}{{if .Evidence}}<p class="evidence">{{index .Evidence 0}}</p>{{end}}<p class="rec">{{.Rec}}</p></div>{{end}}</div>{{else}}<p class="empty">No high-priority actions found.</p>{{end}}
+{{if .QuickWins}}
+<div class="quickwins">
+{{range .QuickWins}}
+<div class="quickwin sev-border-{{.Severity}}">
+<div><span class="sev sev-{{.Severity}}">{{.Severity}}</span> <span class="title">{{.ID}} {{.Title}}</span></div>
+{{if .URL}}<p class="url-line">{{.URL}}</p>{{end}}
+{{if .Evidence}}<p class="evidence">{{index .Evidence 0}}</p>{{end}}
+<p class="rec">{{.Rec}}</p>
+{{if .LLMInstruction}}
+<details class="llm-hint">
+<summary>Instrukcja dla LLM</summary>
+<div class="detail-body"><pre class="llm-prompt"><code>{{.LLMInstruction}}</code></pre></div>
+</details>
+{{end}}
+</div>
+{{end}}
+</div>
+{{else}}
+<p class="empty">No high-priority actions found.</p>
+{{end}}
 </div>
 </details>
+{{if .LLMPrompt}}
+<details id="llm-instructions" class="llm-section">
+<summary><h2 class="section-title">Instrukcje dla LLM (Prompt naprawczy)</h2></summary>
+<div class="detail-body">
+<p class="llm-intro">Skopiuj poniższy prompt i wklej do modelu AI (np. ChatGPT, Claude, Cursor), aby wygenerować kod i instrukcje naprawcze dla wykrytych problemów:</p>
+<pre class="llm-prompt"><code>{{.LLMPrompt}}</code></pre>
+</div>
+</details>
+{{end}}
 {{if .QuickOnly}}<p class="empty">Focused view. Use the regular HTML format for the complete finding list.</p>{{else}}
 {{if .Severities}}<h2>Findingi według priorytetu</h2>
 {{range .Severities}}<details id="findings-{{.Severity}}" open><summary><span class="sev sev-{{.Severity}}">{{.Title}}</span> <span class="count">({{.Count}})</span></summary><div class="detail-body">{{range .Findings}}
@@ -107,6 +173,12 @@ footer { margin-top: 2rem; color: #888; font-size: .8rem; }
 {{if .URL}}<p class="url-line">{{.URL}}</p>{{end}}
 {{if .Evidence}}<ul class="evidence">{{range .Evidence}}<li>{{.}}</li>{{end}}</ul>{{end}}
 {{if .Rec}}<p class="rec">{{.Rec}}</p>{{end}}
+{{if .LLMInstruction}}
+<details class="llm-hint">
+<summary>Instrukcja dla LLM</summary>
+<div class="detail-body"><pre class="llm-prompt"><code>{{.LLMInstruction}}</code></pre></div>
+</details>
+{{end}}
 </div>
 {{end}}</div></details>{{end}}
 {{else}}

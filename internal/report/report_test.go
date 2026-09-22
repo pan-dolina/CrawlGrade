@@ -144,6 +144,12 @@ func TestRenderHTMLQuickWins(t *testing.T) {
 	if !strings.Contains(b.String(), "Quick wins") || !strings.Contains(b.String(), "Fix this") || strings.Contains(b.String(), "No findings.") {
 		t.Fatal(b.String())
 	}
+	if !strings.Contains(b.String(), "Instrukcje dla LLM") || !strings.Contains(b.String(), "Instrukcja dla LLM") {
+		t.Errorf("quick-wins HTML missing LLM instructions:\n%s", b.String())
+	}
+	if !strings.Contains(b.String(), "sev-border-high") {
+		t.Errorf("quick-wins HTML missing high contrast severity border class:\n%s", b.String())
+	}
 	if strings.Contains(b.String(), "href=\"#findings-") {
 		t.Errorf("quick-wins mode should not link to absent findings sections:\n%s", b.String())
 	}
@@ -213,6 +219,9 @@ func TestRenderHTMLPrioritizesTermsAndCollapsesDetails(t *testing.T) {
 		"id=\"findings-low\"",
 		"id=\"terms\"",
 		"id=\"quick-wins\"",
+		"id=\"llm-instructions\"",
+		"Instrukcja dla LLM",
+		"Działaj jako senior web developer",
 		"href=\"#top\"",
 		"class=\"to-top\"",
 		"Do góry",

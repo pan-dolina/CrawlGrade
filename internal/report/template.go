@@ -42,6 +42,11 @@ th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: 
 .quickwins { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .75rem; }
 .quickwin { border: 1px solid #f0c36d; border-left: .35rem solid #e65100; border-radius: .5rem; padding: .75rem; background: #fffaf0; }
 .quickwin .title { font-weight: 700; }
+details { border: 1px solid #ddd; border-radius: .5rem; margin: .65rem 0; background: #fff; }
+summary { cursor: pointer; padding: .75rem; font-weight: 700; }
+summary .count { color: #666; font-weight: 400; }
+.detail-body { padding: 0 .75rem .75rem; }
+.category { color: #666; font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; }
 .url-line { color: #555; font-size: .85rem; word-break: break-all; margin: .25rem 0; }
 .evidence { margin: .35rem 0 0; padding-left: 1.2rem; color: #333; }
 .rec { color: #444; font-size: .9rem; margin-top: .35rem; }
@@ -49,7 +54,7 @@ th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: 
 footer { margin-top: 2rem; color: #888; font-size: .8rem; }
 @media (prefers-color-scheme: dark) {
   body { background: #121212; color: #e6e6e6; }
-  .stat, .finding { background: #1e1e1e; border-color: #333; }
+  .stat, .finding, details { background: #1e1e1e; border-color: #333; }
   th, .url, .url-line, footer { color: #aaa; }
   th { border-color: #333; }
   td { border-color: #2a2a2a; }
@@ -69,29 +74,26 @@ footer { margin-top: 2rem; color: #888; font-size: .8rem; }
 <div class="stat info"><b>{{.Counts.Info}}</b>info</div>
 <div class="stat"><b>{{.Pages}}</b>pages</div>
 </div>
-{{if .Report.Scores}}<p>Technical SEO score: {{.Report.Scores.SEO}}/100. Passive web hygiene: {{.Report.Scores.WebHygiene}}/100. Scores describe observed checks, not rankings.</p>{{end}}
+{{if .Report.Terms}}<h2>Najsilniejsze hasła</h2><table><tr><th>Hasło</th><th>Siła</th></tr>{{range .Report.Terms}}<tr><td>{{.Term}}</td><td>{{.Strength}}</td></tr>{{end}}</table>{{else}}<h2>Najsilniejsze hasła</h2><p class="empty">Brak danych terminologicznych.</p>{{end}}
 <h2>Quick wins</h2>
 {{if .QuickWins}}<div class="quickwins">{{range .QuickWins}}<div class="quickwin"><div><span class="sev sev-{{.Severity}}">{{.Severity}}</span> <span class="title">{{.ID}} {{.Title}}</span></div>{{if .URL}}<p class="url-line">{{.URL}}</p>{{end}}{{if .Evidence}}<p class="evidence">{{index .Evidence 0}}</p>{{end}}<p class="rec">{{.Rec}}</p></div>{{end}}</div>{{else}}<p class="empty">No high-priority actions found.</p>{{end}}
 {{if .QuickOnly}}<p class="empty">Focused view. Use the regular HTML format for the complete finding list.</p>{{else}}
-{{if .Report.Baseline}}<h2>Baseline comparison</h2><p>{{len .Report.Baseline.New}} new findings; {{len .Report.Baseline.Resolved}} resolved. Page delta: {{.Report.Baseline.PageDelta}}. SEO score delta: {{.Report.Baseline.SEOScoreDelta}}.</p>{{end}}
-{{if .Report.Terms}}<h2>Site terms</h2><table><tr><th>Term</th><th>Strength</th></tr>{{range .Report.Terms}}<tr><td>{{.Term}}</td><td>{{.Strength}}</td></tr>{{end}}</table>{{end}}
-{{if .Report.Pages}}<h2>Pages and internal links</h2><table><tr><th>URL</th><th>Status</th><th>Inbound</th><th>Outbound</th><th>Terms</th></tr>{{range .Report.Pages}}<tr><td>{{.URL}}</td><td>{{.Status}}</td><td>{{.Inbound}}</td><td>{{.Outbound}}</td><td>{{range .Terms}}{{.Term}} ({{.Strength}}); {{end}}</td></tr>{{end}}</table>{{end}}
-{{if .Stop}}<p>Crawl stopped: <strong>{{.Stop}}</strong></p>{{end}}
-{{if .Groups}}
-{{range .Groups}}
-<h2>{{.Title}} <span class="empty">{{len .Findings}} finding{{if ne (len .Findings) 1}}s{{end}}</span></h2>
-{{range .Findings}}
+{{if .Severities}}<h2>Findingi według priorytetu</h2>
+{{range .Severities}}<details><summary><span class="sev sev-{{.Severity}}">{{.Title}}</span> <span class="count">({{.Count}})</span></summary><div class="detail-body">{{range .Findings}}
 <div class="finding">
-<div><span class="sev sev-{{.Severity}}">{{.Severity}}</span><span class="title">{{.ID}} {{.Title}}</span></div>
+<div><span class="category">{{.Category}}</span> <span class="title">{{.ID}} {{.Title}}</span></div>
 {{if .URL}}<p class="url-line">{{.URL}}</p>{{end}}
 {{if .Evidence}}<ul class="evidence">{{range .Evidence}}<li>{{.}}</li>{{end}}</ul>{{end}}
 {{if .Rec}}<p class="rec">{{.Rec}}</p>{{end}}
 </div>
-{{end}}
-{{end}}
+{{end}}</div></details>{{end}}
 {{else}}
 <p class="empty">No findings.</p>
 {{end}}
+{{if .Report.Scores}}<p>Technical SEO score: {{.Report.Scores.SEO}}/100. Passive web hygiene: {{.Report.Scores.WebHygiene}}/100. Scores describe observed checks, not rankings.</p>{{end}}
+{{if .Report.Baseline}}<h2>Baseline comparison</h2><p>{{len .Report.Baseline.New}} new findings; {{len .Report.Baseline.Resolved}} resolved. Page delta: {{.Report.Baseline.PageDelta}}. SEO score delta: {{.Report.Baseline.SEOScoreDelta}}.</p>{{end}}
+{{if .Report.Pages}}<details><summary>Pages and internal links <span class="count">({{len .Report.Pages}})</span></summary><div class="detail-body"><table><tr><th>URL</th><th>Status</th><th>Inbound</th><th>Outbound</th><th>Terms</th></tr>{{range .Report.Pages}}<tr><td>{{.URL}}</td><td>{{.Status}}</td><td>{{.Inbound}}</td><td>{{.Outbound}}</td><td>{{range .Terms}}{{.Term}} ({{.Strength}}); {{end}}</td></tr>{{end}}</table></div></details>{{end}}
+{{if .Stop}}<p>Crawl stopped: <strong>{{.Stop}}</strong></p>{{end}}
 {{end}}
 <footer>Generated by CrawlGrade. No data leaves this document.</footer>
 </main>

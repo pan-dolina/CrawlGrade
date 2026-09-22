@@ -42,6 +42,8 @@ all evidence, recommendations and per-page metrics. JSON and HTML retain the
 complete report data. `--quick-wins` creates a focused standalone HTML page
 with the score summary and up to eight prioritized actions, deduplicated by
 finding rule.
+The regular HTML report starts with the strongest terms, then quick wins, and
+keeps page metrics and findings grouped by severity inside expandable details.
 JSON uses schema version `"1"`; `--baseline FILE --diff` compares a live audit
 with a saved report. Web hygiene is reported and scored separately.
 

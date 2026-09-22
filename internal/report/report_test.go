@@ -8,6 +8,7 @@ import (
 
 	"github.com/pan-dolina/crawlgrade/internal/crawler"
 	"github.com/pan-dolina/crawlgrade/internal/findings"
+	"github.com/pan-dolina/crawlgrade/internal/terms"
 )
 
 // makeFinding builds a finding from a rule and URL.
@@ -173,6 +174,34 @@ func TestRenderHTML(t *testing.T) {
 	}
 	if !strings.Contains(buf2.String(), "&lt;script&gt;") {
 		t.Error("HTML output is not escaped")
+	}
+}
+
+func TestRenderHTMLPrioritizesTermsAndCollapsesDetails(t *testing.T) {
+	critical := findings.Rule{ID: "SEO-TEST-CRITICAL", Category: findings.CategoryMetadata, Severity: findings.SeverityCritical, Title: "Critical issue", Recommendation: "Fix it."}.New("https://example.com/")
+	low := findings.Rule{ID: "SEO-TEST-LOW", Category: findings.CategoryContent, Severity: findings.SeverityLow, Title: "Low issue", Recommendation: "Review it."}.New("https://example.com/about")
+	rep := buildReport(map[string][]findings.Finding{
+		GroupMetadata: {critical},
+		GroupContent:  {low},
+	})
+	rep.Terms = []terms.Score{{Term: "strong-term", Strength: 1}}
+
+	var buf bytes.Buffer
+	if err := rep.Render(&buf, FormatHTML); err != nil {
+		t.Fatalf("Render(html): %v", err)
+	}
+	out := buf.String()
+	termsAt := strings.Index(out, "Najsilniejsze hasła")
+	quickWinsAt := strings.Index(out, "Quick wins")
+	detailsAt := strings.Index(out, "Findingi według priorytetu")
+	if termsAt < 0 || quickWinsAt < 0 || detailsAt < 0 {
+		t.Fatalf("HTML missing prioritized sections:\n%s", out)
+	}
+	if !(termsAt < quickWinsAt && quickWinsAt < detailsAt) {
+		t.Fatalf("HTML sections are out of order: terms=%d quick-wins=%d details=%d", termsAt, quickWinsAt, detailsAt)
+	}
+	if !strings.Contains(out, "<details>") || !strings.Contains(out, "Critical issue") || !strings.Contains(out, "Low issue") {
+		t.Fatalf("HTML missing collapsible finding details:\n%s", out)
 	}
 }
 

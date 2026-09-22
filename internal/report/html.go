@@ -20,16 +20,17 @@ func RenderHTMLQuickWins(w io.Writer, rep *Report) error { return renderHTMLMode
 
 func renderHTMLMode(w io.Writer, rep *Report, quickOnly bool) error {
 	data := htmlModel{
-		Report:    rep,
-		StartURL:  rep.Summary.StartURL,
-		Pages:     rep.Summary.Pages,
-		Counts:    summaryCounts(rep.Summary.Findings),
-		Highest:   rep.Summary.Highest,
-		Stop:      rep.Summary.StopReason,
-		Skipped:   skippedRows(rep.Summary.Skipped),
-		Groups:    reportGroups(rep),
-		QuickWins: quickWins(rep),
-		QuickOnly: quickOnly,
+		Report:     rep,
+		StartURL:   rep.Summary.StartURL,
+		Pages:      rep.Summary.Pages,
+		Counts:     summaryCounts(rep.Summary.Findings),
+		Highest:    rep.Summary.Highest,
+		Stop:       rep.Summary.StopReason,
+		Skipped:    skippedRows(rep.Summary.Skipped),
+		Groups:     reportGroups(rep),
+		QuickWins:  quickWins(rep),
+		Severities: severitySections(rep),
+		QuickOnly:  quickOnly,
 	}
 	t, err := loadHTMLTemplate()
 	if err != nil {
@@ -41,16 +42,44 @@ func renderHTMLMode(w io.Writer, rep *Report, quickOnly bool) error {
 // htmlModel is the template model. Every string field is escaped by
 // html/template for the context it is rendered in.
 type htmlModel struct {
-	Report    *Report
-	StartURL  string
-	Pages     int
-	Counts    severityCounts
-	Highest   string
-	Stop      string
-	Skipped   []skipRow
-	Groups    []groupModel
-	QuickWins []findingModel
-	QuickOnly bool
+	Report     *Report
+	StartURL   string
+	Pages      int
+	Counts     severityCounts
+	Highest    string
+	Stop       string
+	Skipped    []skipRow
+	Groups     []groupModel
+	QuickWins  []findingModel
+	Severities []severitySection
+	QuickOnly  bool
+}
+
+type severitySection struct {
+	Title    string
+	Severity string
+	Count    int
+	Findings []findingModel
+}
+
+func severitySections(rep *Report) []severitySection {
+	var out []severitySection
+	for _, sev := range findings.Severities() {
+		section := severitySection{Title: sev.String(), Severity: sev.String()}
+		for _, group := range orderedGroups {
+			for _, f := range rep.Groups[group] {
+				if f.Severity != sev {
+					continue
+				}
+				section.Findings = append(section.Findings, findingModel{ID: f.ID, Severity: f.Severity.String(), Title: f.Title, URL: f.URL, Evidence: f.Evidence, Rec: f.Recommendation, Category: findings.Category(group).Name()})
+			}
+		}
+		section.Count = len(section.Findings)
+		if section.Count > 0 {
+			out = append(out, section)
+		}
+	}
+	return out
 }
 
 func quickWins(rep *Report) []findingModel {
@@ -129,6 +158,7 @@ type findingModel struct {
 	URL      string
 	Evidence []string
 	Rec      string
+	Category string
 }
 
 // reportGroups builds the ordered, non-empty groups for the template.
@@ -148,6 +178,7 @@ func reportGroups(rep *Report) []groupModel {
 				URL:      f.URL,
 				Evidence: f.Evidence,
 				Rec:      f.Recommendation,
+				Category: findingsCategoryName(group),
 			})
 		}
 		groups = append(groups, gm)

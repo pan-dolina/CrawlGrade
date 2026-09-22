@@ -109,6 +109,7 @@ func (a *App) newRootCommand() *cobra.Command {
 	root.Flags().Float64("requests-per-second", 5, "maximum request starts per second, including redirects")
 	root.Flags().Bool("check-external-links", false, "check external link status with bounded HEAD requests")
 	root.Flags().BoolVar(&verbose, "verbose", false, "show full finding evidence, recommendations and page metrics")
+	root.Flags().Bool("quick-wins", false, "HTML only: show the summary and prioritized quick wins")
 	return root
 }
 

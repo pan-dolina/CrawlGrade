@@ -133,6 +133,18 @@ func TestRenderTerminalCompactAndDetailed(t *testing.T) {
 	}
 }
 
+func TestRenderHTMLQuickWins(t *testing.T) {
+	f := findings.Rule{ID: "SEO-TEST-001", Category: findings.CategoryMetadata, Severity: findings.SeverityHigh, Title: "Fix this", Recommendation: "Do this."}.New("https://example.com/", "evidence")
+	rep := buildReport(map[string][]findings.Finding{GroupMetadata: {f}})
+	var b bytes.Buffer
+	if err := RenderHTMLQuickWins(&b, rep); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(b.String(), "Quick wins") || !strings.Contains(b.String(), "Fix this") || strings.Contains(b.String(), "No findings.") {
+		t.Fatal(b.String())
+	}
+}
+
 func TestRenderHTML(t *testing.T) {
 	seo := findings.Rule{ID: "SEO-0001-001", Category: findings.CategoryMetadata, Severity: findings.SeverityLow, Title: "Duplicate title"}
 	rep := buildReport(map[string][]findings.Finding{

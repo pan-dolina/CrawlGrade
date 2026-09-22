@@ -13,6 +13,7 @@ go build -o bin/crawlgrade ./cmd/crawlgrade
 bin/crawlgrade https://example.com --max-pages 100
 bin/crawlgrade https://example.com --json --output baseline.json
 bin/crawlgrade https://example.com --format html --output report.html
+bin/crawlgrade https://example.com --format html --quick-wins --output quick-wins.html
 bin/crawlgrade https://example.com --keywords 'technical SEO,analiza archiwum'
 bin/crawlgrade diff baseline.json current.json --json
 ```
@@ -38,7 +39,9 @@ content duplicates, weighted terms, observed HTTP failures, sitemap comparisons
 and internal link counts. HTML output is standalone, escaped and script-free.
 The default terminal output is a compact triage view; add `--verbose` to show
 all evidence, recommendations and per-page metrics. JSON and HTML retain the
-complete report data.
+complete report data. `--quick-wins` creates a focused standalone HTML page
+with the score summary and up to eight prioritized actions, deduplicated by
+finding rule.
 JSON uses schema version `"1"`; `--baseline FILE --diff` compares a live audit
 with a saved report. Web hygiene is reported and scored separately.
 

@@ -52,6 +52,10 @@ func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string
 		}
 	}
 	asJSON, _ := cmd.Flags().GetBool("json")
+	quickWins, _ := cmd.Flags().GetBool("quick-wins")
+	if quickWins && format != "html" {
+		return usageErrorf("--quick-wins requires --format html")
+	}
 	if asJSON {
 		format = "json"
 	}
@@ -83,7 +87,7 @@ func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string
 	})
 	rep := res.Report
 
-	out, err := renderReport(a.Stdout, rep, format, baseline, diffMode, verbose)
+	out, err := renderReport(a.Stdout, rep, format, baseline, diffMode, verbose, quickWins)
 	if err != nil {
 		return err
 	}
@@ -115,11 +119,17 @@ func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string
 }
 
 // renderReport renders the report, or its diff against baseline when requested.
-func renderReport(w io.Writer, rep *report.Report, format, baseline string, diffMode, verbose bool) ([]byte, error) {
+func renderReport(w io.Writer, rep *report.Report, format, baseline string, diffMode, verbose, quickWins bool) ([]byte, error) {
 	if baseline != "" {
 		return renderBaseline(w, rep, baseline, diffMode, format)
 	}
 	var buf bytes.Buffer
+	if quickWins {
+		if err := report.RenderHTMLQuickWins(&buf, rep); err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
+	}
 	if mustFormat(format) == report.FormatTerminal && verbose {
 		if err := report.RenderTerminalDetailed(&buf, rep); err != nil {
 			return nil, err

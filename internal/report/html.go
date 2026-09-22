@@ -12,16 +12,24 @@ import (
 // contains no script derived from the audited site. All dynamic values are
 // passed through html/template, which escapes them for the context they are
 // rendered in.
-func renderHTML(w io.Writer, rep *Report) error {
+func renderHTML(w io.Writer, rep *Report) error { return renderHTMLMode(w, rep, false) }
+
+// RenderHTMLQuickWins writes a focused standalone report containing the
+// summary and a short prioritized action list.
+func RenderHTMLQuickWins(w io.Writer, rep *Report) error { return renderHTMLMode(w, rep, true) }
+
+func renderHTMLMode(w io.Writer, rep *Report, quickOnly bool) error {
 	data := htmlModel{
-		Report:   rep,
-		StartURL: rep.Summary.StartURL,
-		Pages:    rep.Summary.Pages,
-		Counts:   summaryCounts(rep.Summary.Findings),
-		Highest:  rep.Summary.Highest,
-		Stop:     rep.Summary.StopReason,
-		Skipped:  skippedRows(rep.Summary.Skipped),
-		Groups:   reportGroups(rep),
+		Report:    rep,
+		StartURL:  rep.Summary.StartURL,
+		Pages:     rep.Summary.Pages,
+		Counts:    summaryCounts(rep.Summary.Findings),
+		Highest:   rep.Summary.Highest,
+		Stop:      rep.Summary.StopReason,
+		Skipped:   skippedRows(rep.Summary.Skipped),
+		Groups:    reportGroups(rep),
+		QuickWins: quickWins(rep),
+		QuickOnly: quickOnly,
 	}
 	t, err := loadHTMLTemplate()
 	if err != nil {
@@ -33,14 +41,36 @@ func renderHTML(w io.Writer, rep *Report) error {
 // htmlModel is the template model. Every string field is escaped by
 // html/template for the context it is rendered in.
 type htmlModel struct {
-	Report   *Report
-	StartURL string
-	Pages    int
-	Counts   severityCounts
-	Highest  string
-	Stop     string
-	Skipped  []skipRow
-	Groups   []groupModel
+	Report    *Report
+	StartURL  string
+	Pages     int
+	Counts    severityCounts
+	Highest   string
+	Stop      string
+	Skipped   []skipRow
+	Groups    []groupModel
+	QuickWins []findingModel
+	QuickOnly bool
+}
+
+func quickWins(rep *Report) []findingModel {
+	var out []findingModel
+	seen := map[string]bool{}
+	for _, sev := range []findings.Severity{findings.SeverityCritical, findings.SeverityHigh, findings.SeverityMedium} {
+		for _, group := range orderedGroups {
+			for _, f := range rep.Groups[group] {
+				if f.Severity != sev || seen[f.ID] {
+					continue
+				}
+				seen[f.ID] = true
+				out = append(out, findingModel{ID: f.ID, Severity: f.Severity.String(), Title: f.Title, URL: f.URL, Evidence: f.Evidence[:min(1, len(f.Evidence))], Rec: f.Recommendation})
+				if len(out) == 8 {
+					return out
+				}
+			}
+		}
+	}
+	return out
 }
 
 // severityCounts holds the per-severity tallies for the summary banner.

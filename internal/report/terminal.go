@@ -19,11 +19,41 @@ var severitySymbol = map[findings.Severity]string{
 	findings.SeverityInfo:     ". ",
 }
 
-// RenderTerminal writes a human-readable summary of the report to w. It shows
-// the headline counts, then each finding grouped by analysis, then the crawl
-// notes. It never emits ANSI colour codes itself; the caller may strip or add
-// them.
+// RenderTerminal writes the compact terminal report. It deliberately omits
+// evidence, recommendations and the full page table so a large crawl remains
+// readable. Use RenderTerminalDetailed when those details are needed.
 func RenderTerminal(w io.Writer, rep *Report) error {
+	w = terminalWriter{w}
+	if err := renderSummary(w, rep); err != nil {
+		return err
+	}
+	if rep.Scores != nil {
+		if _, err := fmt.Fprintf(w, "Technical SEO: %d/100; passive web hygiene: %d/100 (not rankings)\n", rep.Scores.SEO, rep.Scores.WebHygiene); err != nil {
+			return err
+		}
+	}
+	for _, term := range rep.Terms[:min(10, len(rep.Terms))] {
+		if _, err := fmt.Fprintf(w, "Term: %s %.1f\n", term.Term, term.Strength); err != nil {
+			return err
+		}
+	}
+	if err := renderCompactFindings(w, rep); err != nil {
+		return err
+	}
+	if rep.Baseline != nil {
+		var b strings.Builder
+		rep.Baseline.RenderTerminal(&b)
+		if _, err := io.WriteString(w, b.String()); err != nil {
+			return err
+		}
+	}
+	return renderNotes(w, rep)
+}
+
+// RenderTerminalDetailed writes every finding with evidence, recommendations
+// and the page/link table. It is intended for debugging or a saved terminal
+// artifact rather than routine interactive use.
+func RenderTerminalDetailed(w io.Writer, rep *Report) error {
 	w = terminalWriter{w}
 	if err := renderSummary(w, rep); err != nil {
 		return err
@@ -46,14 +76,43 @@ func RenderTerminal(w io.Writer, rep *Report) error {
 	if err := renderFindings(w, rep); err != nil {
 		return err
 	}
-	if rep.Baseline != nil {
-		var b strings.Builder
-		rep.Baseline.RenderTerminal(&b)
-		if _, err := io.WriteString(w, b.String()); err != nil {
-			return err
+	return renderNotes(w, rep)
+}
+
+func renderCompactFindings(w io.Writer, rep *Report) error {
+	var b strings.Builder
+	for _, group := range orderedGroups {
+		fs := rep.Groups[group]
+		if len(fs) == 0 {
+			continue
+		}
+		fmt.Fprintf(&b, "\n%s (%d)\n", findings.Category(group).Name(), len(fs))
+		shown := 0
+		for _, f := range fs {
+			limit := 3
+			if f.Severity >= findings.SeverityMedium {
+				limit = 20
+			}
+			if shown >= limit {
+				continue
+			}
+			sym := severitySymbol[f.Severity]
+			fmt.Fprintf(&b, "  %s[%s] %s %s", sym, f.Severity, f.ID, f.Title)
+			if f.URL != "" {
+				fmt.Fprintf(&b, " (%s)", f.URL)
+			}
+			b.WriteByte('\n')
+			shown++
+		}
+		if omitted := len(fs) - shown; omitted > 0 {
+			fmt.Fprintf(&b, "  … %d more; use --verbose for details\n", omitted)
 		}
 	}
-	return renderNotes(w, rep)
+	if len(rep.CategoryGroups()) == 0 {
+		b.WriteString("\nNo findings.\n")
+	}
+	_, err := io.WriteString(w, b.String())
+	return err
 }
 
 // renderSummary writes the headline counts and the stop reason.

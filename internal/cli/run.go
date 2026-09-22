@@ -19,7 +19,7 @@ import (
 )
 
 // runAudit crawls start and writes the report in the requested format.
-func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string, diffMode, noColor, allowPrivate bool, maxPages, maxDepth, conc int) error {
+func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string, diffMode, noColor, allowPrivate, verbose bool, maxPages, maxDepth, conc int) error {
 	u, err := urlnorm.Parse(start)
 	if err != nil {
 		return usageErrorf("invalid start URL %q: %v", start, err)
@@ -83,7 +83,7 @@ func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string
 	})
 	rep := res.Report
 
-	out, err := renderReport(a.Stdout, rep, format, baseline, diffMode)
+	out, err := renderReport(a.Stdout, rep, format, baseline, diffMode, verbose)
 	if err != nil {
 		return err
 	}
@@ -115,12 +115,16 @@ func runAudit(a *App, cmd *cobra.Command, start, format, failOn, baseline string
 }
 
 // renderReport renders the report, or its diff against baseline when requested.
-func renderReport(w io.Writer, rep *report.Report, format, baseline string, diffMode bool) ([]byte, error) {
+func renderReport(w io.Writer, rep *report.Report, format, baseline string, diffMode, verbose bool) ([]byte, error) {
 	if baseline != "" {
 		return renderBaseline(w, rep, baseline, diffMode, format)
 	}
 	var buf bytes.Buffer
-	if err := rep.Render(&buf, mustFormat(format)); err != nil {
+	if mustFormat(format) == report.FormatTerminal && verbose {
+		if err := report.RenderTerminalDetailed(&buf, rep); err != nil {
+			return nil, err
+		}
+	} else if err := rep.Render(&buf, mustFormat(format)); err != nil {
 		return nil, err
 	}
 	return buf.Bytes(), nil

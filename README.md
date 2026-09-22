@@ -36,6 +36,9 @@ makes at most 100 distinct HEAD checks through the same guarded fetcher.
 Reports include metadata, hreflang, images, JSON-LD and microdata breadcrumbs,
 content duplicates, weighted terms, observed HTTP failures, sitemap comparisons
 and internal link counts. HTML output is standalone, escaped and script-free.
+The default terminal output is a compact triage view; add `--verbose` to show
+all evidence, recommendations and per-page metrics. JSON and HTML retain the
+complete report data.
 JSON uses schema version `"1"`; `--baseline FILE --diff` compares a live audit
 with a saved report. Web hygiene is reported and scored separately.
 

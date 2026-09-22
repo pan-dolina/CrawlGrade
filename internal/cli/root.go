@@ -75,6 +75,7 @@ func (a *App) newRootCommand() *cobra.Command {
 		maxPages int
 		maxDepth int
 		conc     int
+		verbose  bool
 	)
 	root := &cobra.Command{
 		Use:           "crawlgrade URL [flags]",
@@ -87,7 +88,7 @@ func (a *App) newRootCommand() *cobra.Command {
 			if len(args) == 0 {
 				return cmd.Help()
 			}
-			return runAudit(a, cmd, args[0], format, failOn, baseline, diffMode, noColor, private, maxPages, maxDepth, conc)
+			return runAudit(a, cmd, args[0], format, failOn, baseline, diffMode, noColor, private, verbose, maxPages, maxDepth, conc)
 		},
 	}
 	flags(root, &format, &failOn, &baseline, &diffMode, &noColor, &maxPages, &maxDepth, &conc)
@@ -107,6 +108,7 @@ func (a *App) newRootCommand() *cobra.Command {
 	root.Flags().String("user-agent", "CrawlGrade", "HTTP user agent (robots policy uses crawlgrade)")
 	root.Flags().Float64("requests-per-second", 5, "maximum request starts per second, including redirects")
 	root.Flags().Bool("check-external-links", false, "check external link status with bounded HEAD requests")
+	root.Flags().BoolVar(&verbose, "verbose", false, "show full finding evidence, recommendations and page metrics")
 	return root
 }
 

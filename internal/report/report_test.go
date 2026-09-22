@@ -115,6 +115,24 @@ func TestRenderTerminalEmpty(t *testing.T) {
 	}
 }
 
+func TestRenderTerminalCompactAndDetailed(t *testing.T) {
+	f := findings.TitleMissing.New("https://example.com/", "evidence line")
+	rep := buildReport(map[string][]findings.Finding{GroupMetadata: {f}})
+	var compact, detailed bytes.Buffer
+	if err := RenderTerminal(&compact, rep); err != nil {
+		t.Fatal(err)
+	}
+	if err := RenderTerminalDetailed(&detailed, rep); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(compact.String(), "evidence line") || strings.Contains(compact.String(), f.Recommendation) {
+		t.Fatalf("compact output contains details:\n%s", compact.String())
+	}
+	if !strings.Contains(detailed.String(), "evidence line") {
+		t.Fatalf("detailed output omitted evidence:\n%s", detailed.String())
+	}
+}
+
 func TestRenderHTML(t *testing.T) {
 	seo := findings.Rule{ID: "SEO-0001-001", Category: findings.CategoryMetadata, Severity: findings.SeverityLow, Title: "Duplicate title"}
 	rep := buildReport(map[string][]findings.Finding{

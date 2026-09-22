@@ -1,0 +1,72 @@
+{
+  "Summary": {
+    "start_url": "SITE/",
+    "pages": 42,
+    "findings": {
+      "critical": 0,
+      "high": 14,
+      "info": 70,
+      "low": 107,
+      "medium": 62
+    },
+    "categories": [
+      "crawlability",
+      "metadata",
+      "content",
+      "structured-data",
+      "internal-linking",
+      "web-hygiene"
+    ],
+    "highest_severity": "high",
+    "stop_reason": "completed",
+    "skipped": {
+      "robots-disallowed": 1
+    }
+  },
+  "Rules": [
+    "SEO-ANCHOR-001",
+    "SEO-BREADCRUMB-001",
+    "SEO-BREADCRUMB-002",
+    "SEO-BREADCRUMB-003",
+    "SEO-CANONICAL-002",
+    "SEO-CANONICAL-003",
+    "SEO-CANONICAL-004",
+    "SEO-CANONICAL-009",
+    "SEO-CONTENT-002",
+    "SEO-DESC-004",
+    "SEO-DESC-005",
+    "SEO-DUPLICATE-001",
+    "SEO-DUPLICATE-002",
+    "SEO-HEADING-002",
+    "SEO-HEADING-003",
+    "SEO-HEADING-004",
+    "SEO-HEADING-005",
+    "SEO-HREFLANG-002",
+    "SEO-HREFLANG-003",
+    "SEO-HREFLANG-005",
+    "SEO-HREFLANG-007",
+    "SEO-HTTP-001",
+    "SEO-HTTP-002",
+    "SEO-IMAGE-001",
+    "SEO-IMAGE-002",
+    "SEO-INDEX-001",
+    "SEO-LANG-003",
+    "SEO-LINK-001",
+    "SEO-LINK-002",
+    "SEO-LINK-004",
+    "SEO-SCHEMA-001",
+    "SEO-SCHEMA-004",
+    "SEO-SCHEMA-005",
+    "SEO-SCHEMA-006",
+    "SEO-SITEMAP-010",
+    "SEO-SOCIAL-002",
+    "SEO-SOCIAL-004",
+    "SEO-SOCIAL-005",
+    "SEO-TERMS-002",
+    "SEO-TERMS-003",
+    "SEO-TITLE-001",
+    "SEO-TITLE-004",
+    "WEB-HYGIENE-001",
+    "WEB-HYGIENE-003"
+  ]
+}

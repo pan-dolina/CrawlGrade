@@ -405,5 +405,42 @@ was retained; missing return links use the new SEO-HREFLANG-007 instead.
 - All HTML report section headings, table columns and LLM remediation prompts
   were standardized in English to maintain consistency with the rest of the CLI.
 
+## Full specification alignment (2026-09-27)
+
+Following a comprehensive audit against `PROJECT.md`, the remaining feature gaps
+and benchmark suites were implemented and verified:
+
+- **Web Hygiene Checks**:
+  - Implemented `WEB-HYGIENE-006` (`Strict-Transport-Security` / HSTS check,
+    evaluating `max-age` on HTTPS responses per RFC 6797 §7.2).
+  - Implemented `WEB-HYGIENE-007` (`Content-Security-Policy` presence check).
+  - Implemented `WEB-HYGIENE-008` (clickjacking protection check verifying either
+    `X-Frame-Options` or CSP `frame-ancestors`).
+  - Added test coverage in `internal/webhygiene/webhygiene_test.go` and verified
+    rule ID stability (`WEB-HYGIENE-001` through `WEB-HYGIENE-008`).
+  - Set default CSP and XFO headers in `testsite` to maintain deterministic
+    finding counts in functional golden tests.
+- **Benchmarks**:
+  - Added `BenchmarkLinks10k` in `internal/links/benchmark_test.go` (10,000 links
+    across 500 pages).
+  - Added `BenchmarkTokenizer`, `BenchmarkNgrams`, and `BenchmarkTFIDF1000Docs`
+    in `internal/terms/benchmark_test.go`.
+  - Added `BenchmarkFingerprints` in `internal/duplicates/benchmark_test.go`
+    (benchmarking SimHash and pairwise near-duplicate analysis).
+  - All benchmarks run cleanly and adhere to `b.ReportAllocs()`.
+- **Documentation**:
+  - Added `CONTRIBUTING.md` and `CODE_OF_CONDUCT.md` (Contributor Covenant v2.1)
+    to repository root.
+  - Added `docs/checks.md` cataloging all 6 finding categories and 60+ rules.
+  - Added `docs/scoring.md` detailing technical SEO and web hygiene penalty
+    weights and arithmetic.
+  - Added `docs/term-strength.md` detailing text extraction, zone weighting,
+    logarithmic TF-IDF, and 0-100 normalization.
+  - Added `docs/limitations.md` detailing passive-only boundaries, static parsing,
+    SSRF protections, and resource bounds.
+  - Updated `docs/web-hygiene.md` with descriptions and remediation for all 8
+    passive hygiene checks.
+
+
 
 

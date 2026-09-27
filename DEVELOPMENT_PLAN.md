@@ -49,11 +49,11 @@ heuristics and limits are documented in `docs/analysis.md`.
 ## Milestone 6 - Assurance and release
 
 - [x] Functional and golden tests against the compiled binary
-- [x] Fuzz targets for HTML/metadata, JSON-LD/microdata, robots, sitemap, URL, content, terms and saved report parsers; extraction benchmark
+- [x] Fuzz targets for HTML/metadata, JSON-LD/microdata, robots, sitemap, URL, content, terms and saved report parsers; complete benchmark suite (large HTML, 10k links, tokenizer, n-grams, TF-IDF 1000 docs, duplicate fingerprints)
 - [x] CI definitions for Linux, macOS and Windows; static analysis and vulnerability scanning
 - [x] SBOM generation and reproducible build scripts
 - [x] Release workflow for keyless signing, provenance and platform smoke tests
-- [x] Local security review and user/developer documentation
+- [x] Local security review and complete repository documentation (CONTRIBUTING, CODE_OF_CONDUCT, checks, scoring, term strength, web hygiene, limitations)
 - [ ] Hosted CI/release execution and publication of v0.1.0 (requires GitHub)
 
 Local source, workflow definitions and release preparation are implemented.

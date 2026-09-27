@@ -49,6 +49,8 @@ func Handler() http.Handler {
 		base := "http://" + r.Host
 		h := w.Header()
 		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Content-Security-Policy", "default-src 'self'")
+		h.Set("X-Frame-Options", "SAMEORIGIN")
 		for k, v := range p.Header {
 			h.Set(k, strings.ReplaceAll(v, "{{base}}", base))
 		}

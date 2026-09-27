@@ -34,6 +34,8 @@ func (s testSite) server(t *testing.T) *httptest.Server {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
 		_, _ = w.Write([]byte(body))
 	}))
 	t.Cleanup(srv.Close)

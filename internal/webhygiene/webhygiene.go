@@ -61,6 +61,15 @@ func pageChecks(p Check) []findings.Finding {
 	var out []findings.Finding
 	if !p.IsHTTPS {
 		out = append(out, findings.WebHygieneInsecure.New(p.URL))
+	} else {
+		hsts := p.Header.Get("Strict-Transport-Security")
+		if hsts == "" || !strings.Contains(strings.ToLower(hsts), "max-age") {
+			evidence := "missing"
+			if hsts != "" {
+				evidence = "value: " + hsts
+			}
+			out = append(out, findings.WebHygieneHSTS.New(p.URL, evidence))
+		}
 	}
 	if h := p.Header.Get("X-Content-Type-Options"); h == "" || !strings.EqualFold(h, "nosniff") {
 		evidence := "missing"
@@ -71,6 +80,15 @@ func pageChecks(p Check) []findings.Finding {
 	}
 	if p.Header.Get("Referrer-Policy") == "" {
 		out = append(out, findings.WebHygieneReferrer.New(p.URL))
+	}
+	csp := p.Header.Get("Content-Security-Policy")
+	if strings.TrimSpace(csp) == "" {
+		out = append(out, findings.WebHygieneCSP.New(p.URL))
+	}
+	xfo := p.Header.Get("X-Frame-Options")
+	hasFrameAncestors := strings.Contains(strings.ToLower(csp), "frame-ancestors")
+	if strings.TrimSpace(xfo) == "" && !hasFrameAncestors {
+		out = append(out, findings.WebHygieneFrame.New(p.URL))
 	}
 	return out
 }

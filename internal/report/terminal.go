@@ -37,6 +37,9 @@ func RenderTerminal(w io.Writer, rep *Report) error {
 			return err
 		}
 	}
+	if err := renderHighlights(w, rep); err != nil {
+		return err
+	}
 	if err := renderCompactFindings(w, rep); err != nil {
 		return err
 	}
@@ -67,6 +70,9 @@ func RenderTerminalDetailed(w io.Writer, rep *Report) error {
 		if _, err := fmt.Fprintf(w, "Term: %s %.1f\n", term.Term, term.Strength); err != nil {
 			return err
 		}
+	}
+	if err := renderHighlights(w, rep); err != nil {
+		return err
 	}
 	for _, p := range rep.Pages {
 		if _, err := fmt.Fprintf(w, "Page: %s status=%d inbound=%d outbound=%d\n", p.URL, p.Status, p.Inbound, p.Outbound); err != nil {
@@ -126,6 +132,26 @@ func renderSummary(w io.Writer, rep *Report) error {
 		rep.Summary.Findings["info"])
 	if rep.Summary.StopReason != "" {
 		fmt.Fprintf(&b, "Crawl stopped: %s\n", rep.Summary.StopReason)
+	}
+	_, err := io.WriteString(w, b.String())
+	return err
+}
+
+// renderHighlights writes the summary strengths and weaknesses.
+func renderHighlights(w io.Writer, rep *Report) error {
+	strengths, weaknesses := rep.Highlights()
+	var b strings.Builder
+	if len(strengths) > 0 {
+		b.WriteString("\nStrengths\n")
+		for _, s := range strengths {
+			fmt.Fprintf(&b, "  + %s\n", s)
+		}
+	}
+	if len(weaknesses) > 0 {
+		b.WriteString("\nWeaknesses\n")
+		for _, wk := range weaknesses {
+			fmt.Fprintf(&b, "  - %s\n", wk)
+		}
 	}
 	_, err := io.WriteString(w, b.String())
 	return err

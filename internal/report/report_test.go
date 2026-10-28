@@ -261,3 +261,61 @@ func TestFindingCountAndFindings(t *testing.T) {
 		t.Errorf("Findings(metadata) len = %d, want 1", len(got))
 	}
 }
+
+func TestStrengthsAndWeaknessesSummary(t *testing.T) {
+	crit := findings.Rule{ID: "SEO-TITLE-001", Category: findings.CategoryMetadata, Severity: findings.SeverityCritical, Title: "Missing <title> element", Recommendation: "Add a title."}.New("https://example.com/")
+	rep := buildReport(map[string][]findings.Finding{
+		GroupMetadata: {crit},
+	})
+	rep.Terms = []terms.Score{
+		{Term: "seo audit", Strength: 100.0},
+		{Term: "technical", Strength: 82.5},
+		{Term: "footer", Strength: 14.2},
+		{Term: "missing-kw", Strength: 0.0},
+	}
+	rep.Scores = &Scores{SEO: 72, WebHygiene: 95}
+	rep.Pages = []PageMetric{
+		{URL: "https://example.com/", Status: 200, Indexable: true, Inbound: 3, Outbound: 2},
+		{URL: "https://example.com/orphan", Status: 200, Indexable: true, Inbound: 0, Outbound: 1},
+	}
+	rep.BuildHighlights()
+
+	strengthsJoined := strings.Join(rep.Strengths, "\n")
+	weaknessesJoined := strings.Join(rep.Weaknesses, "\n")
+
+	for _, want := range []string{
+		"Best keywords: seo audit (100.0), technical (82.5)",
+		"Strong passive web hygiene score (95/100)",
+		"All 2 crawled page(s) returned healthy HTTP 2xx status",
+		"Most linked internal page: https://example.com/ (3 inbound links)",
+	} {
+		if !strings.Contains(strengthsJoined, want) {
+			t.Errorf("Strengths missing %q:\n%s", want, strengthsJoined)
+		}
+	}
+	for _, want := range []string{
+		"Missing target keywords (0.0): missing-kw",
+		"Weakest keywords: footer (14.2)",
+		"Low technical SEO score (72/100)",
+		"1 indexable page(s) have no inbound internal links",
+		"Key issue: [SEO-TITLE-001] Missing <title> element (critical)",
+	} {
+		if !strings.Contains(weaknessesJoined, want) {
+			t.Errorf("Weaknesses missing %q:\n%s", want, weaknessesJoined)
+		}
+	}
+
+	var htmlBuf, termBuf bytes.Buffer
+	if err := rep.Render(&htmlBuf, FormatHTML); err != nil {
+		t.Fatalf("Render(html): %v", err)
+	}
+	if !strings.Contains(htmlBuf.String(), "Strengths and weaknesses") || !strings.Contains(htmlBuf.String(), "Best keywords: seo audit (100.0)") || !strings.Contains(htmlBuf.String(), "Weakest keywords: footer (14.2)") {
+		t.Errorf("HTML output missing strengths/weaknesses summary:\n%s", htmlBuf.String())
+	}
+	if err := RenderTerminal(&termBuf, rep); err != nil {
+		t.Fatalf("RenderTerminal: %v", err)
+	}
+	if !strings.Contains(termBuf.String(), "Strengths\n") || !strings.Contains(termBuf.String(), "Weaknesses\n") {
+		t.Errorf("Terminal output missing strengths/weaknesses sections:\n%s", termBuf.String())
+	}
+}

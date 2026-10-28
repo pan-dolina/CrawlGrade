@@ -440,6 +440,14 @@ and benchmark suites were implemented and verified:
     SSRF protections, and resource bounds.
   - Updated `docs/web-hygiene.md` with descriptions and remediation for all 8
     passive hygiene checks.
+- **Strengths and Weaknesses Report Summary**:
+  - Added deterministic `Strengths` and `Weaknesses` summaries to `report.Report`
+    (`Highlights` / `BuildHighlights`), rendered across JSON, terminal, and
+    standalone HTML reports (`<details id="summary-highlights" open>`).
+  - Summarizes best/strongest keywords, weakest and missing target keywords,
+    technical SEO and passive web hygiene score health, HTTP 2xx / indexability /
+    inbound link coverage, clean categories, and top actionable findings.
+
 
 
 

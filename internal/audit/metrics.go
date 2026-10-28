@@ -61,8 +61,10 @@ func enrichReport(rep *report.Report, c *crawler.Result, keywords []string) {
 		}
 	}
 	if len(zones) == 0 {
+		rep.BuildHighlights()
 		return
 	}
 	n := len(zones)
 	rep.Scores = &report.Scores{SEO: max(0, 100-penalty/n), WebHygiene: max(0, 100-hygiene/n)}
+	rep.BuildHighlights()
 }

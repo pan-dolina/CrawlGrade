@@ -56,6 +56,15 @@ th { font-size: .8rem; text-transform: uppercase; letter-spacing: .03em; color: 
 .quickwin .url-line { color: #334155; font-size: .85rem; word-break: break-all; margin: .25rem 0; }
 .quickwin .evidence { color: #1e293b; margin: .35rem 0 0; padding-left: 1.2rem; }
 .quickwin .rec { color: #0f172a; font-size: .9rem; font-weight: 500; margin-top: .45rem; padding-top: .45rem; border-top: 1px dashed #cbd5e1; }
+.highlights { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .75rem; margin-top: .5rem; }
+.highlight-card { border: 1px solid #cbd5e1; border-left: .35rem solid #64748b; border-radius: .5rem; padding: .85rem; background: #f8fafc; }
+.highlight-card.strengths { border-left-color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
+.highlight-card.weaknesses { border-left-color: #b00020; background: #fef2f2; border-color: #fecaca; }
+.highlight-card h3 { margin: 0 0 .5rem; font-size: .95rem; }
+.highlight-card.strengths h3 { color: #166534; }
+.highlight-card.weaknesses h3 { color: #991b1b; }
+.highlight-card ul { margin: 0; padding-left: 1.2rem; }
+.highlight-card li { margin: .25rem 0; }
 details { border: 1px solid #ddd; border-radius: .5rem; margin: .65rem 0; background: #fff; }
 details:target { border-color: #0056b3; box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.25); }
 summary { cursor: pointer; padding: .75rem; font-weight: 700; user-select: none; }
@@ -97,6 +106,11 @@ footer { margin-top: 2rem; color: #888; font-size: .8rem; }
   .quickwin.sev-border-medium { border-left-color: #f59e0b; }
   .quickwin.sev-border-low { border-left-color: #22c55e; }
   .quickwin.sev-border-info { border-left-color: #38bdf8; }
+  .highlight-card { background: #18202c; border-color: #334155; }
+  .highlight-card.strengths { background: #0f291e; border-color: #14532d; border-left-color: #22c55e; }
+  .highlight-card.weaknesses { background: #2a1215; border-color: #7f1d1d; border-left-color: #ef4444; }
+  .highlight-card.strengths h3 { color: #86efac; }
+  .highlight-card.weaknesses h3 { color: #fca5a5; }
   .llm-section { background: #151329; border-color: #6366f1; }
   .llm-section summary { color: #c7d2fe; }
   .llm-intro { color: #94a3b8; }
@@ -125,6 +139,21 @@ footer { margin-top: 2rem; color: #888; font-size: .8rem; }
 {{if and (not .QuickOnly) (gt .Counts.Info 0)}}<a class="stat stat-link info" href="#findings-info"><b>{{.Counts.Info}}</b>info</a>{{else}}<div class="stat info"><b>{{.Counts.Info}}</b>info</div>{{end}}
 {{if and (not .QuickOnly) .Pages}}<a class="stat stat-link" href="#pages"><b>{{.Pages}}</b>pages</a>{{else}}<div class="stat"><b>{{.Pages}}</b>pages</div>{{end}}
 </div>
+<details id="summary-highlights" open>
+<summary><h2 class="section-title">Strengths and weaknesses</h2></summary>
+<div class="detail-body">
+<div class="highlights">
+<div class="highlight-card strengths">
+<h3>Strengths ({{len .Strengths}})</h3>
+{{if .Strengths}}<ul>{{range .Strengths}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="empty">No notable strengths recorded.</p>{{end}}
+</div>
+<div class="highlight-card weaknesses">
+<h3>Weaknesses ({{len .Weaknesses}})</h3>
+{{if .Weaknesses}}<ul>{{range .Weaknesses}}<li>{{.}}</li>{{end}}</ul>{{else}}<p class="empty">No notable weaknesses recorded.</p>{{end}}
+</div>
+</div>
+</div>
+</details>
 <details id="terms" open>
 <summary><h2 class="section-title">Site terms</h2>{{if .Report.Terms}} <span class="count">({{len .Report.Terms}})</span>{{end}}</summary>
 <div class="detail-body">

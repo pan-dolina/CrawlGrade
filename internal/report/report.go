@@ -46,10 +46,12 @@ type Summary struct {
 // Report is one complete audit: a summary plus the findings that came from
 // each analysis, grouped by source.
 type Report struct {
-	Baseline *Diff         `json:"baseline_diff,omitempty"`
-	Pages    []PageMetric  `json:"pages,omitempty"`
-	Terms    []terms.Score `json:"terms,omitempty"`
-	Scores   *Scores       `json:"scores,omitempty"`
+	Baseline   *Diff         `json:"baseline_diff,omitempty"`
+	Pages      []PageMetric  `json:"pages,omitempty"`
+	Terms      []terms.Score `json:"terms,omitempty"`
+	Scores     *Scores       `json:"scores,omitempty"`
+	Strengths  []string      `json:"strengths,omitempty"`
+	Weaknesses []string      `json:"weaknesses,omitempty"`
 	// Version is the schema version (see SchemaVersion).
 	Version string `json:"schema_version"`
 	// Summary is the headline information about the crawl.
@@ -93,6 +95,7 @@ func New(start string, crawl *crawler.Result, groups map[string][]findings.Findi
 		Groups:  groups,
 	}
 	rep.Summary = buildSummary(start, crawl, all, groups)
+	rep.BuildHighlights()
 	return rep
 }
 

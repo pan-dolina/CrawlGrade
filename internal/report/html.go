@@ -21,6 +21,7 @@ func renderHTML(w io.Writer, rep *Report) error { return renderHTMLMode(w, rep, 
 func RenderHTMLQuickWins(w io.Writer, rep *Report) error { return renderHTMLMode(w, rep, true) }
 
 func renderHTMLMode(w io.Writer, rep *Report, quickOnly bool) error {
+	strengths, weaknesses := rep.Highlights()
 	data := htmlModel{
 		Report:     rep,
 		StartURL:   rep.Summary.StartURL,
@@ -32,6 +33,8 @@ func renderHTMLMode(w io.Writer, rep *Report, quickOnly bool) error {
 		Groups:     reportGroups(rep),
 		QuickWins:  quickWins(rep),
 		Severities: severitySections(rep),
+		Strengths:  strengths,
+		Weaknesses: weaknesses,
 		QuickOnly:  quickOnly,
 		LLMPrompt:  buildLLMPrompt(rep, rep.Summary.StartURL, quickOnly),
 	}
@@ -55,6 +58,8 @@ type htmlModel struct {
 	Groups     []groupModel
 	QuickWins  []findingModel
 	Severities []severitySection
+	Strengths  []string
+	Weaknesses []string
 	QuickOnly  bool
 	LLMPrompt  string
 }

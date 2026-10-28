@@ -49,6 +49,7 @@ type Report struct {
 	Baseline   *Diff         `json:"baseline_diff,omitempty"`
 	Pages      []PageMetric  `json:"pages,omitempty"`
 	Terms      []terms.Score `json:"terms,omitempty"`
+	WeakTerms  []terms.Score `json:"weak_terms,omitempty"`
 	Scores     *Scores       `json:"scores,omitempty"`
 	Strengths  []string      `json:"strengths,omitempty"`
 	Weaknesses []string      `json:"weaknesses,omitempty"`

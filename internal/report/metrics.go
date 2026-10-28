@@ -42,6 +42,9 @@ func (rep *Report) Highlights() (strengths, weaknesses []string) {
 				missing = append(missing, t.Term)
 				continue
 			}
+			if !terms.IsKeyword(t.Term) {
+				continue
+			}
 			if len(best) < 5 && (t.Strength >= 50 || len(best) == 0) {
 				best = append(best, fmt.Sprintf("%s (%.1f)", t.Term, t.Strength))
 				bestSet[t.Term] = true
@@ -53,14 +56,25 @@ func (rep *Report) Highlights() (strengths, weaknesses []string) {
 		if len(missing) > 0 {
 			weaknesses = append(weaknesses, "Missing target keywords (0.0): "+strings.Join(missing, ", "))
 		}
-		topStrength := rep.Terms[0].Strength
-		for i := len(rep.Terms) - 1; i >= 0 && len(worst) < 5; i-- {
-			t := rep.Terms[i]
-			if t.Strength <= 0 || bestSet[t.Term] {
+		for _, t := range rep.WeakTerms {
+			if len(worst) >= 5 {
+				break
+			}
+			if t.Strength <= 0 || bestSet[t.Term] || !terms.IsKeyword(t.Term) {
 				continue
 			}
-			if t.Strength < 50 || t.Strength < topStrength {
-				worst = append(worst, fmt.Sprintf("%s (%.1f)", t.Term, t.Strength))
+			worst = append(worst, fmt.Sprintf("%s (%.1f)", t.Term, t.Strength))
+		}
+		if len(worst) == 0 {
+			topStrength := rep.Terms[0].Strength
+			for i := len(rep.Terms) - 1; i >= 0 && len(worst) < 5; i-- {
+				t := rep.Terms[i]
+				if t.Strength <= 0 || bestSet[t.Term] || !terms.IsKeyword(t.Term) {
+					continue
+				}
+				if t.Strength < 50 || t.Strength < topStrength {
+					worst = append(worst, fmt.Sprintf("%s (%.1f)", t.Term, t.Strength))
+				}
 			}
 		}
 		if len(worst) > 0 {

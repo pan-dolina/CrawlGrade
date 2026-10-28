@@ -35,6 +35,7 @@ func enrichReport(rep *report.Report, c *crawler.Result, keywords []string) {
 	}
 	w := terms.Weigh(zones, keywords)
 	rep.Terms = w.Site
+	rep.WeakTerms = w.Weak
 	for _, p := range c.Pages {
 		m := report.PageMetric{URL: p.URL, Depth: p.Depth}
 		if p.Response != nil {

@@ -113,7 +113,7 @@ func (rep *Report) Highlights() (strengths, weaknesses []string) {
 					unlinked++
 				}
 			}
-			if p.Inbound > bestInbound {
+			if p.Indexable && p.Inbound > bestInbound {
 				bestInbound = p.Inbound
 				bestURL = p.URL
 			}

@@ -38,7 +38,7 @@ func IsKeyword(term string) bool {
 		if letters == 0 || runes < 2 {
 			return false
 		}
-		if letters >= 3 {
+		if letters >= 3 || (runes >= 3 && letters >= 2) {
 			hasLongWord = true
 		}
 	}

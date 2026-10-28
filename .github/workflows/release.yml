@@ -75,7 +75,7 @@ jobs:
             bin="$(find "$dir" -name 'crawlgrade*' -type f | head -1)"
             SBOM_NAME="$name" scripts/sbom.sh dist "$bin"
             case "$name" in
-              *_linux_amd64) go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 -mode=binary "$bin" ;;
+              *_linux_amd64) go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 -mode=binary "$bin" ;;
             esac
           done
           ls -l dist

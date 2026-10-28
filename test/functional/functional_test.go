@@ -110,6 +110,7 @@ func TestBinary(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
 	if !bytes.Equal(projection, want) {
 		t.Fatalf("golden mismatch: %s", projection)
 	}
